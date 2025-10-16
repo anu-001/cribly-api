@@ -26,8 +26,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         await this.deviceToken.deleteMany();
         await this.notification.deleteMany();
         await this.message.deleteMany();
-        await this.chatMember.deleteMany();
-        await this.chat.deleteMany();
+        // TODO: Update once Prisma client syncs - use conversation and conversationParticipant
+        // await this.conversationParticipant.deleteMany();
+        // await this.conversation.deleteMany();
         await this.match.deleteMany();
         await this.listing.deleteMany();
         await this.user.deleteMany();

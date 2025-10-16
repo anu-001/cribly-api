@@ -106,7 +106,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     ) {
         try {
             const message = await this.chatService.sendMessage(
-                data.chatId,
                 data.userId,
                 data.message,
             );
@@ -159,7 +158,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @MessageBody() data: { chatId: string; userId: string },
     ) {
         try {
-            await this.chatService.markMessagesAsRead(data.chatId, data.userId);
+            await this.chatService.markAsRead(data.userId, { conversationId: data.chatId });
 
             // Notify other users in chat that messages were read
             client.to(`chat:${data.chatId}`).emit('messagesRead', {

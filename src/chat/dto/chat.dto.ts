@@ -9,6 +9,15 @@ export enum MessageType {
 
 export class SendMessageDto {
     @ApiProperty({
+        description: 'ID of the conversation to send message to',
+        example: 'cuid-conversation-id',
+        type: String
+    })
+    @IsString()
+    @IsNotEmpty()
+    conversationId: string;
+
+    @ApiProperty({
         description: 'Message content or text',
         example: 'Hello! I\'m interested in your property listing.',
         type: String
@@ -49,23 +58,26 @@ export class SendMessageDto {
     tempId?: string; // For frontend optimistic updates
 }
 
-export class CreateChatDto {
+// Conversations are automatically created when matches are accepted
+// No need for manual conversation creation since they're tied to matches
+export class JoinConversationDto {
     @ApiProperty({
-        description: 'ID of the user to start a chat with',
-        example: 'uuid-string-participant',
+        description: 'ID of the conversation to join',
+        example: 'cuid-conversation-id',
         type: String
     })
     @IsString()
     @IsNotEmpty()
-    participantId: string;
+    conversationId: string;
+}
 
+export class MarkAsReadDto {
     @ApiProperty({
-        description: 'Optional name for the chat conversation',
-        example: 'Property Discussion',
-        type: String,
-        required: false
+        description: 'ID of the conversation to mark messages as read',
+        example: 'cuid-conversation-id',
+        type: String
     })
     @IsString()
-    @IsOptional()
-    name?: string;
+    @IsNotEmpty()
+    conversationId: string;
 }

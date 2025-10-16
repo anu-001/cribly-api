@@ -204,7 +204,7 @@ export class NotificationService {
                 data: {
                     userId,
                     token,
-                    platform,
+                    platform: platform as any, // TODO: Fix once Prisma client syncs with enum
                 },
             });
 

@@ -13,13 +13,22 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
+// Canadian/North American Property Types
 export enum PropertyType {
-    APARTMENT = 'APARTMENT',
     HOUSE = 'HOUSE',
     CONDO = 'CONDO',
+    APARTMENT = 'APARTMENT',
+    TOWNHOUSE = 'TOWNHOUSE',
+    DUPLEX = 'DUPLEX',
+    TRIPLEX = 'TRIPLEX',
+    BASEMENT_SUITE = 'BASEMENT_SUITE',
+    LOFT = 'LOFT',
     STUDIO = 'STUDIO',
-    ROOM = 'ROOM',
+    ROOM = 'ROOM', // Room rental common in Canadian cities
+    COTTAGE = 'COTTAGE', // Summer cottages popular in Canada
+    MOBILE_HOME = 'MOBILE_HOME',
     COMMERCIAL = 'COMMERCIAL',
+    OTHER = 'OTHER',
 }
 
 export class CreateListingDto {
@@ -52,15 +61,15 @@ export class CreateListingDto {
     price: number;
 
     @ApiProperty({
-        description: 'Currency code for the price',
-        example: 'USD',
+        description: 'Currency code for the price (Canadian Dollar default)',
+        example: 'CAD',
         type: String,
         required: false,
-        default: 'USD'
+        default: 'CAD'
     })
     @IsString()
     @IsOptional()
-    currency?: string = 'USD';
+    currency?: string = 'CAD';
 
     @ApiProperty({
         description: 'Type of property',
@@ -84,8 +93,8 @@ export class CreateListingDto {
     bedrooms?: number;
 
     @ApiProperty({
-        description: 'Number of bathrooms',
-        example: 2,
+        description: 'Number of bathrooms (supports half bathrooms, e.g., 2.5)',
+        example: 2.5,
         type: Number,
         required: false,
         minimum: 0
@@ -105,7 +114,7 @@ export class CreateListingDto {
     @IsNumber()
     @IsOptional()
     @Min(0)
-    area?: number;
+    sqft?: number;
 
     @ApiProperty({
         description: 'Whether the property is furnished',
@@ -120,24 +129,36 @@ export class CreateListingDto {
 
     @ApiProperty({
         description: 'Street address of the property',
-        example: '123 Main Street, Apt 4B',
-        type: String
+        example: '123 King Street West, Unit 801',
+        type: String,
+        required: false
     })
     @IsString()
-    @IsNotEmpty()
-    address: string;
+    @IsOptional()
+    address?: string;
 
     @ApiProperty({
         description: 'City where the property is located',
-        example: 'New York',
-        type: String
+        example: 'Toronto',
+        type: String,
+        required: false
     })
     @IsString()
-    @IsNotEmpty()
-    city: string;
+    @IsOptional()
+    city?: string;
 
     @ApiProperty({
-        description: 'State or province (optional)',
+        description: 'Canadian province (e.g., ON, BC, QC)',
+        example: 'ON',
+        type: String,
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    province?: string;
+
+    @ApiProperty({
+        description: 'US State (for American listings)',
         example: 'NY',
         type: String,
         required: false
@@ -147,13 +168,35 @@ export class CreateListingDto {
     state?: string;
 
     @ApiProperty({
-        description: 'Country where the property is located',
-        example: 'USA',
-        type: String
+        description: 'Canadian postal code (A1A 1A1 format)',
+        example: 'M5V 3A8',
+        type: String,
+        required: false
     })
     @IsString()
-    @IsNotEmpty()
-    country: string;
+    @IsOptional()
+    postalCode?: string;
+
+    @ApiProperty({
+        description: 'US ZIP code (for American listings)',
+        example: '10001',
+        type: String,
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    zipCode?: string;
+
+    @ApiProperty({
+        description: 'Country (Canada default for North American market)',
+        example: 'CA',
+        type: String,
+        required: false,
+        default: 'CA'
+    })
+    @IsString()
+    @IsOptional()
+    country?: string = 'CA';
 
     @ApiProperty({
         description: 'Latitude coordinate of the property location',
@@ -169,7 +212,7 @@ export class CreateListingDto {
 
     @ApiProperty({
         description: 'Longitude coordinate of the property location',
-        example: -74.0060,
+        example: -79.3832,
         type: Number,
         minimum: -180,
         maximum: 180
@@ -179,9 +222,86 @@ export class CreateListingDto {
     @Max(180)
     longitude: number;
 
+    // Canadian-specific property features
+    @ApiProperty({
+        description: 'Year the property was built',
+        example: 2015,
+        type: Number,
+        required: false,
+        minimum: 1800
+    })
+    @IsNumber()
+    @IsOptional()
+    @Min(1800)
+    yearBuilt?: number;
+
+    @ApiProperty({
+        description: 'Number of parking spots',
+        example: 1,
+        type: Number,
+        required: false,
+        minimum: 0
+    })
+    @IsNumber()
+    @IsOptional()
+    @Min(0)
+    parkingSpots?: number;
+
+    @ApiProperty({
+        description: 'Heating type (important for Canadian climate)',
+        example: 'Central heating',
+        type: String,
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    heating?: string;
+
+    @ApiProperty({
+        description: 'Cooling/Air conditioning type',
+        example: 'Central air',
+        type: String,
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    cooling?: string;
+
+    @ApiProperty({
+        description: 'Utilities included in rent',
+        example: ['heat', 'hydro', 'internet'],
+        type: [String],
+        required: false
+    })
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    utilities?: string[];
+
+    @ApiProperty({
+        description: 'Pet policy',
+        example: 'Cats allowed, no dogs',
+        type: String,
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    petPolicy?: string;
+
+    @ApiProperty({
+        description: 'Smoking allowed',
+        example: false,
+        type: Boolean,
+        required: false,
+        default: false
+    })
+    @IsBoolean()
+    @IsOptional()
+    smokingPolicy?: boolean = false;
+
     @ApiProperty({
         description: 'Array of image URLs for the property',
-        example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+        example: ['https://cloudinary.com/image1.jpg', 'https://cloudinary.com/image2.jpg'],
         type: [String],
         required: false,
         maxItems: 10
