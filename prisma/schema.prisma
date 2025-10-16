@@ -1,0 +1,240 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id        String  @id @default(uuid())
+    email     String  @unique
+    firstName String?
+    lastName  String?
+    avatar    String?
+    phone     String?
+    bio       String?
+
+    // Location for matching
+    latitude  Float?
+    longitude Float?
+
+    // Authentication
+    supabaseId String @unique
+
+    // Preferences
+    preferences Json?
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    listings        Listing[]
+    sentMatches     Match[]        @relation("SentMatches")
+    receivedMatches Match[]        @relation("ReceivedMatches")
+    chatMembers     ChatMember[]
+    messages        Message[]
+    notifications   Notification[]
+    deviceTokens    DeviceToken[]
+
+    // Performance indexes
+    @@index([email])
+    @@index([latitude, longitude])
+    @@index([supabaseId])
+    @@index([createdAt])
+    @@map("users")
+}
+
+model Listing {
+    id          String @id @default(uuid())
+    title       String
+    description String
+    price       Float
+    currency    String @default("USD")
+
+    // Property details
+    propertyType String
+    bedrooms     Int?
+    bathrooms    Int?
+    area         Float?
+    furnished    Boolean @default(false)
+
+    // Location
+    address   String
+    city      String
+    state     String?
+    country   String
+    latitude  Float
+    longitude Float
+
+    // Media
+    images String[]
+
+    // Status
+    isActive    Boolean @default(true)
+    isAvailable Boolean @default(true)
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    userId  String
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    matches Match[]
+
+    // Performance indexes
+    @@index([latitude, longitude])
+    @@index([userId, isActive])
+    @@index([createdAt])
+    @@index([price])
+    @@index([propertyType])
+    @@index([city, country])
+    @@index([isActive, isAvailable])
+    @@map("listings")
+}
+
+model Match {
+    id      String      @id @default(uuid())
+    status  MatchStatus @default(PENDING)
+    message String?
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    userId    String
+    user      User    @relation("SentMatches", fields: [userId], references: [id], onDelete: Cascade)
+    listingId String
+    listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    ownerId   String
+    owner     User    @relation("ReceivedMatches", fields: [ownerId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, listingId])
+    // Performance indexes
+    @@index([userId, status])
+    @@index([ownerId, status])
+    @@index([listingId])
+    @@index([createdAt])
+    @@index([status])
+    @@map("matches")
+}
+
+enum MatchStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+model Chat {
+    id      String  @id @default(uuid())
+    isGroup Boolean @default(false)
+    name    String?
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    members  ChatMember[]
+    messages Message[]
+
+    @@map("chats")
+}
+
+model ChatMember {
+    id       String    @id @default(uuid())
+    joinedAt DateTime  @default(now())
+    leftAt   DateTime?
+
+    // Relations
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    chatId String
+    chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, chatId])
+    @@map("chat_members")
+}
+
+model Message {
+    id       String      @id @default(uuid())
+    content  String
+    type     MessageType @default(TEXT)
+    mediaUrl String?
+
+    // Status
+    isRead   Boolean @default(false)
+    isEdited Boolean @default(false)
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    senderId String
+    sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+    chatId   String
+    chat     Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+    @@map("messages")
+}
+
+enum MessageType {
+    TEXT
+    IMAGE
+    DOCUMENT
+}
+
+model Notification {
+    id    String           @id @default(uuid())
+    title String
+    body  String
+    type  NotificationType
+    data  Json?
+
+    // Status
+    isRead Boolean @default(false)
+    isSent Boolean @default(false)
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("notifications")
+}
+
+enum NotificationType {
+    MATCH_REQUEST
+    MATCH_ACCEPTED
+    MATCH_REJECTED
+    NEW_MESSAGE
+    LISTING_INTEREST
+    SYSTEM_UPDATE
+}
+
+model DeviceToken {
+    id       String @id @default(uuid())
+    token    String @unique
+    platform String // ios, android, web
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("device_tokens")
+}
