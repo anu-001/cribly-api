@@ -15,6 +15,7 @@ import { NotificationModule } from './notifications/notification.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HealthModule } from './health/health.module';
 import { CommonModule } from './common/common.module';
+import { RoommatesModule } from './roommates/roommates.module';
 
 // Guards, Interceptors, and Filters
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -54,6 +55,7 @@ import { AppController } from './app.controller';
         AuthModule,
         UserModule,
         ListingModule,
+        RoommatesModule,
         MatchModule,
         ChatModule,
         NotificationModule,

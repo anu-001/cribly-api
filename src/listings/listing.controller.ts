@@ -10,6 +10,7 @@ import {
     UseGuards,
     HttpCode,
     HttpStatus,
+    Req,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -20,10 +21,12 @@ import {
     ApiParam,
     ApiQuery
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { ListingService } from './listing.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CreateListingDto, UpdateListingDto, ListingFilterDto } from './dto/listing.dto';
+import { ExploreListingsDto } from './dto/explore-listings.dto';
 import { SUCCESS_MESSAGES } from '../common/constants/app.constants';
 
 @ApiTags('Listings')
@@ -110,6 +113,112 @@ export class ListingController {
     })
     async findAllListings(@Query() listingFilterDto: ListingFilterDto) {
         return this.listingService.findAll(listingFilterDto);
+    }
+
+    @Get('explore')
+    @ApiOperation({
+        summary: 'Explore Listings',
+        description: 'Advanced property search with location-based filtering, sorting, and comprehensive filters.'
+    })
+    @ApiQuery({ name: 'search', description: 'Search across title, description, and address', required: false })
+    @ApiQuery({ name: 'propertyType', description: 'Property type filter', enum: ['HOUSE', 'APARTMENT', 'CONDO', 'TOWNHOUSE', 'STUDIO', 'ROOM'], required: false })
+    @ApiQuery({ name: 'minPrice', description: 'Minimum price filter', type: 'number', required: false })
+    @ApiQuery({ name: 'maxPrice', description: 'Maximum price filter', type: 'number', required: false })
+    @ApiQuery({ name: 'bedrooms', description: 'Number of bedrooms', type: 'number', required: false })
+    @ApiQuery({ name: 'bathrooms', description: 'Number of bathrooms', type: 'number', required: false })
+    @ApiQuery({ name: 'furnished', description: 'Furnished status', type: 'boolean', required: false })
+    @ApiQuery({ name: 'latitude', description: 'Latitude for location-based search', type: 'number', required: false })
+    @ApiQuery({ name: 'longitude', description: 'Longitude for location-based search', type: 'number', required: false })
+    @ApiQuery({ name: 'radius', description: 'Search radius in kilometers (default: 50)', type: 'number', required: false })
+    @ApiQuery({ name: 'city', description: 'City filter', required: false })
+    @ApiQuery({ name: 'province', description: 'Province/State filter', required: false })
+    @ApiQuery({ name: 'country', description: 'Country filter', required: false })
+    @ApiQuery({ name: 'sortBy', description: 'Sort field', enum: ['createdAt', 'price', 'distance', 'bedrooms', 'bathrooms'], required: false })
+    @ApiQuery({ name: 'sortOrder', description: 'Sort order', enum: ['asc', 'desc'], required: false })
+    @ApiQuery({ name: 'page', description: 'Page number (default: 1)', type: 'number', required: false })
+    @ApiQuery({ name: 'limit', description: 'Items per page (default: 20, max: 100)', type: 'number', required: false })
+    @ApiResponse({
+        status: 200,
+        description: 'Listings explored successfully',
+        schema: {
+            example: {
+                listings: [
+                    {
+                        id: "uuid-string",
+                        title: "Modern 2BR Condo",
+                        description: "Luxurious condo with city views",
+                        price: 350000,
+                        propertyType: "CONDO",
+                        bedrooms: 2,
+                        bathrooms: 2,
+                        furnished: true,
+                        latitude: 43.6532,
+                        longitude: -79.3832,
+                        address: "123 Bay St, Toronto, ON",
+                        city: "Toronto",
+                        province: "Ontario",
+                        country: "Canada",
+                        distance: 2.5,
+                        images: ["https://cloudinary.com/image1.jpg"],
+                        user: {
+                            id: "user-uuid",
+                            firstName: "John",
+                            lastName: "Doe",
+                            avatar: "https://cloudinary.com/avatar.jpg"
+                        },
+                        _count: {
+                            matches: 5
+                        },
+                        createdAt: "2024-01-01T00:00:00.000Z"
+                    }
+                ],
+                pagination: {
+                    page: 1,
+                    limit: 20,
+                    total: 45,
+                    totalPages: 3,
+                    hasNextPage: true,
+                    hasPreviousPage: false
+                },
+                filters: {
+                    appliedFilters: {
+                        search: "modern",
+                        propertyType: "CONDO",
+                        priceRange: { minPrice: 300000, maxPrice: 500000 },
+                        location: {
+                            latitude: 43.6532,
+                            longitude: -79.3832,
+                            radius: 25
+                        }
+                    },
+                    sorting: {
+                        sortBy: "distance",
+                        sortOrder: "asc"
+                    }
+                },
+                meta: {
+                    totalListings: 45,
+                    resultsCount: 20,
+                    searchLocation: {
+                        latitude: 43.6532,
+                        longitude: -79.3832
+                    },
+                    hasLocationFiltering: true
+                }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Invalid query parameters' })
+    async exploreListings(
+        @Query() exploreDto: ExploreListingsDto,
+        @Req() request: Request,
+    ) {
+        const clientIp = request.ip ||
+            request.connection.remoteAddress ||
+            request.socket.remoteAddress ||
+            (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim();
+
+        return this.listingService.explore(exploreDto, clientIp);
     }
 
     @Get('my-listings')
