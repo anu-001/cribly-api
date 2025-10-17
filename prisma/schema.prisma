@@ -8,16 +8,28 @@ datasource db {
 }
 
 model User {
-  id                       String                    @id @default(uuid())
+  id                       String                    @id @default(cuid())
   email                    String                    @unique
   firstName                String?
   lastName                 String?
   avatar                   String?
   phone                    String?
-  bio                      String?
   latitude                 Float?
   longitude                Float?
-  supabaseId               String                    @unique
+  bio                      String?
+  
+  // Custom Authentication Fields
+  passwordHash             String?                   // Hashed password for email/password auth
+  emailVerified            Boolean                   @default(false)
+  emailVerificationToken   String?                   @unique
+  passwordResetToken       String?                   @unique
+  passwordResetExpires     DateTime?
+  refreshToken             String?                   @unique
+  lastLogin                DateTime?
+  isActive                 Boolean                   @default(true)
+  
+  // Legacy Supabase field (can be removed later)
+  supabaseId               String?                   @unique
   preferences              Json?
   createdAt                DateTime                  @default(now())
   updatedAt                DateTime                  @updatedAt
@@ -31,7 +43,9 @@ model User {
 
   @@index([email])
   @@index([latitude, longitude])
-  @@index([supabaseId])
+  @@index([emailVerificationToken])
+  @@index([passwordResetToken])
+  @@index([refreshToken])
   @@index([createdAt])
   @@map("users")
 }

@@ -1,57 +1,89 @@
-import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import {
+    Injectable,
+    UnauthorizedException,
+    BadRequestException,
+    ConflictException,
+    Logger
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
-import { SignUpDto, SignInDto, RefreshTokenDto, ResetPasswordDto } from './dto/auth.dto';
+import {
+    SignUpDto,
+    SignInDto,
+    RefreshTokenDto,
+    ForgotPasswordDto,
+    ResetPasswordDto,
+    VerifyEmailDto,
+    AuthResponseDto,
+    MessageResponseDto
+} from './dto/auth.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
-    private readonly supabase: SupabaseClient;
     private readonly logger = new Logger(AuthService.name);
 
     constructor(
         private configService: ConfigService,
         private prismaService: PrismaService,
-    ) {
-        this.supabase = createClient(
-            this.configService.get('SUPABASE_URL'),
-            this.configService.get('SUPABASE_ANON_KEY'),
-        );
-    }
+        private jwtService: JwtService,
+    ) { }
 
-    async signUp(signUpDto: SignUpDto) {
+    async signUp(signUpDto: SignUpDto): Promise<AuthResponseDto> {
         try {
-            const { data, error } = await this.supabase.auth.signUp({
-                email: signUpDto.email,
-                password: signUpDto.password,
-                options: {
-                    data: {
-                        firstName: signUpDto.firstName,
-                        lastName: signUpDto.lastName,
-                    },
+            // Check if user already exists
+            const existingUser = await this.prismaService.user.findUnique({
+                where: { email: signUpDto.email },
+            });
+
+            if (existingUser) {
+                throw new ConflictException('User with this email already exists');
+            }
+
+            // Hash password
+            const saltRounds = 12;
+            const passwordHash = await bcrypt.hash(signUpDto.password, saltRounds);
+
+            // Generate email verification token
+            const emailVerificationToken = randomBytes(32).toString('hex');
+
+            // Create user
+            const user = await this.prismaService.user.create({
+                data: {
+                    email: signUpDto.email,
+                    firstName: signUpDto.firstName,
+                    lastName: signUpDto.lastName,
+                    phone: signUpDto.phone,
+                    passwordHash,
+                    emailVerificationToken,
+                    emailVerified: false, // Require email verification
+                    isActive: true,
                 },
             });
 
-            if (error) {
-                throw new BadRequestException(error.message);
-            }
+            // Generate tokens
+            const { accessToken, refreshToken } = await this.generateTokens(user.id);
 
-            // Create user in our database
-            if (data.user) {
-                await this.prismaService.user.create({
-                    data: {
-                        id: data.user.id,
-                        email: data.user.email!,
-                        firstName: signUpDto.firstName,
-                        lastName: signUpDto.lastName,
-                        supabaseId: data.user.id,
-                    },
-                });
-            }
+            // Store refresh token
+            await this.storeRefreshToken(user.id, refreshToken);
+
+            // TODO: Send verification email (implement later)
+            this.logger.log(`User registered: ${user.email}. Verification token: ${emailVerificationToken}`);
 
             return {
-                user: data.user,
-                session: data.session,
+                accessToken,
+                refreshToken,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    avatar: user.avatar,
+                    emailVerified: user.emailVerified,
+                    createdAt: user.createdAt,
+                },
             };
         } catch (error) {
             this.logger.error('Sign up failed', error);
@@ -59,20 +91,51 @@ export class AuthService {
         }
     }
 
-    async signIn(signInDto: SignInDto) {
+    async signIn(signInDto: SignInDto): Promise<AuthResponseDto> {
         try {
-            const { data, error } = await this.supabase.auth.signInWithPassword({
-                email: signInDto.email,
-                password: signInDto.password,
+            // Find user by email
+            const user = await this.prismaService.user.findUnique({
+                where: { email: signInDto.email },
             });
 
-            if (error) {
-                throw new UnauthorizedException(error.message);
+            if (!user || !user.passwordHash) {
+                throw new UnauthorizedException('Invalid email or password');
             }
 
+            if (!user.isActive) {
+                throw new UnauthorizedException('Account is deactivated');
+            }
+
+            // Verify password
+            const isPasswordValid = await bcrypt.compare(signInDto.password, user.passwordHash);
+            if (!isPasswordValid) {
+                throw new UnauthorizedException('Invalid email or password');
+            }
+
+            // Generate tokens
+            const { accessToken, refreshToken } = await this.generateTokens(user.id);
+
+            // Store refresh token and update last login
+            await Promise.all([
+                this.storeRefreshToken(user.id, refreshToken),
+                this.prismaService.user.update({
+                    where: { id: user.id },
+                    data: { lastLogin: new Date() },
+                }),
+            ]);
+
             return {
-                user: data.user,
-                session: data.session,
+                accessToken,
+                refreshToken,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    avatar: user.avatar,
+                    emailVerified: user.emailVerified,
+                    createdAt: user.createdAt,
+                },
             };
         } catch (error) {
             this.logger.error('Sign in failed', error);
@@ -80,73 +143,159 @@ export class AuthService {
         }
     }
 
-    async signOut(accessToken: string) {
+    async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<{ accessToken: string }> {
         try {
-            const { error } = await this.supabase.auth.admin.signOut(accessToken);
+            // Find user by refresh token
+            const user = await this.prismaService.user.findUnique({
+                where: { refreshToken: refreshTokenDto.refreshToken },
+            });
 
-            if (error) {
-                throw new BadRequestException(error.message);
+            if (!user) {
+                throw new UnauthorizedException('Invalid refresh token');
             }
 
-            return { success: true };
+            // Verify refresh token
+            try {
+                await this.jwtService.verifyAsync(refreshTokenDto.refreshToken, {
+                    secret: this.configService.get('JWT_REFRESH_SECRET'),
+                });
+            } catch {
+                throw new UnauthorizedException('Invalid refresh token');
+            }
+
+            // Generate new access token
+            const accessToken = await this.jwtService.signAsync(
+                { sub: user.id, email: user.email },
+                {
+                    secret: this.configService.get('JWT_SECRET'),
+                    expiresIn: '15m',
+                }
+            );
+
+            return { accessToken };
+        } catch (error) {
+            this.logger.error('Refresh token failed', error);
+            throw error;
+        }
+    }
+
+    async signOut(userId: string): Promise<MessageResponseDto> {
+        try {
+            // Clear refresh token
+            await this.prismaService.user.update({
+                where: { id: userId },
+                data: { refreshToken: null },
+            });
+
+            return {
+                message: 'Successfully signed out',
+                success: true,
+            };
         } catch (error) {
             this.logger.error('Sign out failed', error);
             throw error;
         }
     }
 
-    async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<MessageResponseDto> {
         try {
-            const { data, error } = await this.supabase.auth.refreshSession({
-                refresh_token: refreshTokenDto.refreshToken,
+            const user = await this.prismaService.user.findUnique({
+                where: { email: forgotPasswordDto.email },
             });
 
-            if (error) {
-                throw new UnauthorizedException(error.message);
+            if (!user) {
+                // Don't reveal if email exists or not for security
+                return {
+                    message: 'If an account with that email exists, a password reset link has been sent',
+                    success: true,
+                };
             }
+
+            // Generate password reset token
+            const resetToken = randomBytes(32).toString('hex');
+            const resetExpires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+
+            await this.prismaService.user.update({
+                where: { id: user.id },
+                data: {
+                    passwordResetToken: resetToken,
+                    passwordResetExpires: resetExpires,
+                },
+            });
+
+            // TODO: Send password reset email
+            this.logger.log(`Password reset requested for: ${user.email}. Reset token: ${resetToken}`);
 
             return {
-                user: data.user,
-                session: data.session,
+                message: 'If an account with that email exists, a password reset link has been sent',
+                success: true,
             };
         } catch (error) {
-            this.logger.error('Token refresh failed', error);
+            this.logger.error('Forgot password failed', error);
             throw error;
         }
     }
 
-    async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<MessageResponseDto> {
         try {
-            const { error } = await this.supabase.auth.resetPasswordForEmail(
-                resetPasswordDto.email,
-                {
-                    redirectTo: `${this.configService.get('FRONTEND_URL')}/reset-password`,
+            const user = await this.prismaService.user.findUnique({
+                where: { passwordResetToken: resetPasswordDto.token },
+            });
+
+            if (!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()) {
+                throw new BadRequestException('Invalid or expired reset token');
+            }
+
+            // Hash new password
+            const saltRounds = 12;
+            const passwordHash = await bcrypt.hash(resetPasswordDto.newPassword, saltRounds);
+
+            // Update password and clear reset token
+            await this.prismaService.user.update({
+                where: { id: user.id },
+                data: {
+                    passwordHash,
+                    passwordResetToken: null,
+                    passwordResetExpires: null,
+                    refreshToken: null, // Force re-login
                 },
-            );
+            });
 
-            if (error) {
-                throw new BadRequestException(error.message);
-            }
-
-            return { success: true };
+            return {
+                message: 'Password reset successful',
+                success: true,
+            };
         } catch (error) {
-            this.logger.error('Password reset failed', error);
+            this.logger.error('Reset password failed', error);
             throw error;
         }
     }
 
-    async verifyToken(token: string) {
+    async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<MessageResponseDto> {
         try {
-            const { data: user, error } = await this.supabase.auth.getUser(token);
+            const user = await this.prismaService.user.findUnique({
+                where: { emailVerificationToken: verifyEmailDto.token },
+            });
 
-            if (error || !user) {
-                throw new UnauthorizedException('Invalid token');
+            if (!user) {
+                throw new BadRequestException('Invalid verification token');
             }
 
-            return user.user;
+            await this.prismaService.user.update({
+                where: { id: user.id },
+                data: {
+                    emailVerified: true,
+                    emailVerificationToken: null,
+                },
+            });
+
+            return {
+                message: 'Email verified successfully',
+                success: true,
+            };
         } catch (error) {
-            this.logger.error('Token verification failed', error);
-            throw new UnauthorizedException('Token verification failed');
+            this.logger.error('Email verification failed', error);
+            throw error;
         }
     }
 
@@ -162,9 +311,7 @@ export class AuthService {
                     avatar: true,
                     phone: true,
                     bio: true,
-                    latitude: true,
-                    longitude: true,
-                    preferences: true,
+                    emailVerified: true,
                     createdAt: true,
                     updatedAt: true,
                 },
@@ -181,56 +328,53 @@ export class AuthService {
         }
     }
 
-    async confirmEmailWithToken(tokenHash: string) {
-        try {
-            this.logger.log('Confirming email with token hash');
+    // Private helper methods
+    private async generateTokens(userId: string): Promise<{ accessToken: string; refreshToken: string }> {
+        const user = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true },
+        });
 
-            // Verify the email confirmation token with Supabase
-            const { data, error } = await this.supabase.auth.verifyOtp({
-                token_hash: tokenHash,
-                type: 'signup'
-            });
+        const payload = { sub: userId, email: user.email };
 
-            if (error) {
-                this.logger.error('Supabase email confirmation error:', error);
-                throw new BadRequestException(`Email confirmation failed: ${error.message}`);
-            }
+        const [accessToken, refreshToken] = await Promise.all([
+            this.jwtService.signAsync(payload, {
+                secret: this.configService.get('JWT_SECRET'),
+                expiresIn: '15m',
+            }),
+            this.jwtService.signAsync(payload, {
+                secret: this.configService.get('JWT_REFRESH_SECRET'),
+                expiresIn: '7d',
+            }),
+        ]);
 
-            if (!data.user) {
-                throw new BadRequestException('No user found in confirmation data');
-            }
+        return { accessToken, refreshToken };
+    }
 
-            this.logger.log(`Email confirmed for user: ${data.user.id}`);
+    private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
+        await this.prismaService.user.update({
+            where: { id: userId },
+            data: { refreshToken },
+        });
+    }
 
-            // Update or create user in our database after email confirmation
-            const { user_metadata } = data.user;
-            await this.prismaService.user.upsert({
-                where: { id: data.user.id },
-                update: {
-                    email: data.user.email!,
-                },
-                create: {
-                    id: data.user.id,
-                    email: data.user.email!,
-                    firstName: user_metadata?.firstName || '',
-                    lastName: user_metadata?.lastName || '',
-                    supabaseId: data.user.id,
-                },
-            });
+    async validateUser(userId: string) {
+        const user = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                isActive: true,
+                emailVerified: true,
+            },
+        });
 
-            return {
-                success: true,
-                message: 'Email confirmed successfully',
-                user: data.user,
-                session: data.session,
-            };
-
-        } catch (error) {
-            this.logger.error('Email confirmation failed:', error);
-            if (error instanceof BadRequestException) {
-                throw error;
-            }
-            throw new BadRequestException('Email confirmation failed');
+        if (!user || !user.isActive) {
+            return null;
         }
+
+        return user;
     }
 }
