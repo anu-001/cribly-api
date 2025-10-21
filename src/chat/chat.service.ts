@@ -19,7 +19,7 @@ export class ChatService {
   constructor(
     private prismaService: PrismaService,
     private notificationService: NotificationService,
-  ) { }
+  ) {}
 
   // Get user's conversations (from matches that have been accepted)
   async getUserConversations(userId: string, page = 1, limit = 20) {
@@ -72,7 +72,7 @@ export class ChatService {
                 select: {
                   id: true,
                   title: true,
-                  images: {
+                  listingImages: {
                     take: 1,
                     select: { url: true },
                   },
@@ -81,10 +81,7 @@ export class ChatService {
             },
           },
         },
-        orderBy: [
-          { lastMessageAt: 'desc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ lastMessageAt: 'desc' }, { createdAt: 'desc' }],
         skip: offset,
         take: limit,
       });
@@ -104,12 +101,13 @@ export class ChatService {
       // Calculate unread count for each conversation
       const conversationsWithUnread = await Promise.all(
         conversations.map(async (conversation) => {
-          const participant = await this.prismaService.conversationParticipant.findFirst({
-            where: {
-              conversationId: conversation.id,
-              userId,
-            },
-          });
+          const participant =
+            await this.prismaService.conversationParticipant.findFirst({
+              where: {
+                conversationId: conversation.id,
+                userId,
+              },
+            });
 
           const unreadCount = await this.prismaService.message.count({
             where: {
@@ -125,8 +123,8 @@ export class ChatService {
           return {
             ...conversation,
             unreadCount,
-            lastMessage: (conversation as any).messages[0] || null,
-            otherParticipant: (conversation as any).participants[0]?.user || null,
+            lastMessage: conversation.messages?.[0] ?? null,
+            otherParticipant: conversation.participants?.[0]?.user ?? null,
           };
         }),
       );
@@ -433,24 +431,25 @@ export class ChatService {
       }
 
       // Return updated conversation
-      const updatedConversation = await this.prismaService.conversation.findUnique({
-        where: { id: joinConversationDto.conversationId },
-        include: {
-          participants: {
-            where: { leftAt: null },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
+      const updatedConversation =
+        await this.prismaService.conversation.findUnique({
+          where: { id: joinConversationDto.conversationId },
+          include: {
+            participants: {
+              where: { leftAt: null },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    avatar: true,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
 
       return {
         id: updatedConversation!.id,

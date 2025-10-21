@@ -15,7 +15,7 @@ import { CloudinaryService } from '../../common/services/cloudinary.service';
 @Controller('api/v1/chat/upload')
 @UseGuards(JwtAuthGuard)
 export class ChatUploadController {
-  constructor(private cloudinaryService: CloudinaryService) { }
+  constructor(private cloudinaryService: CloudinaryService) {}
 
   @Post('image')
   @ApiOperation({
@@ -199,13 +199,13 @@ export class ChatUploadController {
       const isImage = file.mimetype.startsWith('image/');
       const result = isImage
         ? await this.cloudinaryService.uploadImage(
-          file.buffer,
-          file.originalname,
-        )
+            file.buffer,
+            file.originalname,
+          )
         : await this.cloudinaryService.uploadDocument(
-          file.buffer,
-          file.originalname,
-        );
+            file.buffer,
+            file.originalname,
+          );
 
       return {
         success: true,

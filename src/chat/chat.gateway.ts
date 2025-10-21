@@ -9,16 +9,10 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/chat.dto';
-import {
-  EnhancedSendMessageDto,
-  EditMessageDto,
-  DeleteMessageDto,
-  TypingIndicatorDto,
-  MessageStatusDto,
-} from './dto/enhanced-chat.dto';
+// DTO imports intentionally omitted when unused
 
 @WebSocketGateway({
   cors: {
@@ -30,7 +24,8 @@ import {
   pingInterval: 25000,
 })
 export class ChatGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -39,7 +34,7 @@ export class ChatGateway
   private userSockets = new Map<string, string>(); // socketId -> userId
   private userTyping = new Map<string, Set<string>>(); // conversationId -> Set<userId>
 
-  constructor(private chatService: ChatService) { }
+  constructor(private chatService: ChatService) {}
 
   afterInit(server: Server) {
     this.logger.log('ChatGateway initialized');
@@ -106,7 +101,7 @@ export class ChatGateway
     @MessageBody() data: { userId: string; chatId?: string },
   ) {
     try {
-  // Store user connection
+      // Store user connection
       this.connectedUsers.set(data.userId, client);
       this.userSockets.set(client.id, data.userId);
 

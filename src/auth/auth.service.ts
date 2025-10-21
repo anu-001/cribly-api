@@ -31,7 +31,7 @@ export class AuthService {
     private prismaService: PrismaService,
     private jwtService: JwtService,
     private notificationService: NotificationService,
-  ) { }
+  ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<AuthResponseDto> {
     try {

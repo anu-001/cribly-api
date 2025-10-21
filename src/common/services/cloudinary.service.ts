@@ -13,6 +13,16 @@ export interface FileUploadResult {
   height?: number;
 }
 
+type CloudinaryResult = {
+  secure_url?: string;
+  public_id?: string;
+  format?: string;
+  resource_type?: string;
+  bytes?: number;
+  width?: number;
+  height?: number;
+};
+
 @Injectable()
 export class CloudinaryService {
   private readonly logger = new Logger(CloudinaryService.name);
@@ -34,38 +44,40 @@ export class CloudinaryService {
     folder = 'cribly/chat',
   ): Promise<FileUploadResult> {
     try {
-      const uploadResult = await new Promise<unknown>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder,
-            public_id: `${Date.now()}-${fileName}`,
-            resource_type: 'auto', // Automatically detect file type
-            quality: 'auto:good',
-            fetch_format: 'auto',
-            flags: 'attachment', // Force download for documents
-            access_mode: 'public',
-          },
-          (error, result) => {
-            if (error) {
-              this.logger.error('Cloudinary upload failed:', error);
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          },
-        );
+      const uploadResult = await new Promise<CloudinaryResult>(
+        (resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder,
+              public_id: `${Date.now()}-${fileName}`,
+              resource_type: 'auto', // Automatically detect file type
+              quality: 'auto:good',
+              fetch_format: 'auto',
+              flags: 'attachment', // Force download for documents
+              access_mode: 'public',
+            },
+            (error, result) => {
+              if (error) {
+                this.logger.error('Cloudinary upload failed:', error);
+                reject(error);
+              } else {
+                resolve(result as CloudinaryResult);
+              }
+            },
+          );
 
-        // Convert buffer to stream and pipe to Cloudinary
-        const stream = Readable.from(fileBuffer);
-        stream.pipe(uploadStream);
-      });
+          // Convert buffer to stream and pipe to Cloudinary
+          const stream = Readable.from(fileBuffer);
+          stream.pipe(uploadStream);
+        },
+      );
 
       return {
-        url: uploadResult.secure_url,
-        publicId: uploadResult.public_id,
-        format: uploadResult.format,
-        resourceType: uploadResult.resource_type,
-        bytes: uploadResult.bytes,
+        url: uploadResult.secure_url ?? '',
+        publicId: uploadResult.public_id ?? '',
+        format: uploadResult.format ?? '',
+        resourceType: uploadResult.resource_type ?? 'auto',
+        bytes: uploadResult.bytes ?? 0,
         width: uploadResult.width,
         height: uploadResult.height,
       };
@@ -84,40 +96,42 @@ export class CloudinaryService {
     folder = 'cribly/chat/images',
   ): Promise<FileUploadResult> {
     try {
-      const uploadResult = await new Promise<any>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder,
-            public_id: `${Date.now()}-${fileName}`,
-            resource_type: 'image',
-            quality: 'auto:good',
-            fetch_format: 'auto',
-            transformation: [
-              { width: 1200, height: 1200, crop: 'limit' },
-              { quality: 'auto:good' },
-            ],
-            access_mode: 'public',
-          },
-          (error, result) => {
-            if (error) {
-              this.logger.error('Cloudinary image upload failed:', error);
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          },
-        );
+      const uploadResult = await new Promise<CloudinaryResult>(
+        (resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder,
+              public_id: `${Date.now()}-${fileName}`,
+              resource_type: 'image',
+              quality: 'auto:good',
+              fetch_format: 'auto',
+              transformation: [
+                { width: 1200, height: 1200, crop: 'limit' },
+                { quality: 'auto:good' },
+              ],
+              access_mode: 'public',
+            },
+            (error, result) => {
+              if (error) {
+                this.logger.error('Cloudinary image upload failed:', error);
+                reject(error);
+              } else {
+                resolve(result as CloudinaryResult);
+              }
+            },
+          );
 
-        const stream = Readable.from(fileBuffer);
-        stream.pipe(uploadStream);
-      });
+          const stream = Readable.from(fileBuffer);
+          stream.pipe(uploadStream);
+        },
+      );
 
       return {
-        url: uploadResult.secure_url,
-        publicId: uploadResult.public_id,
-        format: uploadResult.format,
-        resourceType: uploadResult.resource_type,
-        bytes: uploadResult.bytes,
+        url: uploadResult.secure_url ?? '',
+        publicId: uploadResult.public_id ?? '',
+        format: uploadResult.format ?? '',
+        resourceType: uploadResult.resource_type ?? 'image',
+        bytes: uploadResult.bytes ?? 0,
         width: uploadResult.width,
         height: uploadResult.height,
       };
@@ -156,35 +170,37 @@ export class CloudinaryService {
         );
       }
 
-      const uploadResult = await new Promise<any>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder,
-            public_id: `${Date.now()}-${fileName}`,
-            resource_type: 'raw', // For non-image files
-            access_mode: 'public',
-            flags: 'attachment', // Force download
-          },
-          (error, result) => {
-            if (error) {
-              this.logger.error('Cloudinary document upload failed:', error);
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          },
-        );
+      const uploadResult = await new Promise<CloudinaryResult>(
+        (resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder,
+              public_id: `${Date.now()}-${fileName}`,
+              resource_type: 'raw', // For non-image files
+              access_mode: 'public',
+              flags: 'attachment', // Force download
+            },
+            (error, result) => {
+              if (error) {
+                this.logger.error('Cloudinary document upload failed:', error);
+                reject(error);
+              } else {
+                resolve(result as CloudinaryResult);
+              }
+            },
+          );
 
-        const stream = Readable.from(fileBuffer);
-        stream.pipe(uploadStream);
-      });
+          const stream = Readable.from(fileBuffer);
+          stream.pipe(uploadStream);
+        },
+      );
 
       return {
-        url: uploadResult.secure_url,
-        publicId: uploadResult.public_id,
-        format: uploadResult.format,
-        resourceType: uploadResult.resource_type,
-        bytes: uploadResult.bytes,
+        url: uploadResult.secure_url ?? '',
+        publicId: uploadResult.public_id ?? '',
+        format: uploadResult.format ?? '',
+        resourceType: uploadResult.resource_type ?? 'raw',
+        bytes: uploadResult.bytes ?? 0,
       };
     } catch (error) {
       this.logger.error('Document upload failed:', error);

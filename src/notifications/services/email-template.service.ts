@@ -1,30 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-    EmailTemplate,
-    WelcomeEmailContext,
-    PasswordResetContext,
-    MatchNotificationContext,
-    MessageNotificationContext,
+  EmailTemplate,
+  WelcomeEmailContext,
+  PasswordResetContext,
+  MatchNotificationContext,
+  MessageNotificationContext,
 } from '../templates/email-template.interface';
 
 @Injectable()
 export class EmailTemplateService {
-    private readonly frontendUrl: string;
-    private readonly supportEmail: string;
-    private readonly companyName = 'Cribly';
-    private readonly brandColor = '#2563eb';
-    private readonly accentColor = '#f59e0b';
+  private readonly frontendUrl: string;
+  private readonly supportEmail: string;
+  private readonly companyName = 'Cribly';
+  private readonly brandColor = '#2563eb';
+  private readonly accentColor = '#f59e0b';
 
-    constructor(private readonly configService: ConfigService) {
-        this.frontendUrl =
-            this.configService.get<string>('FRONTEND_URL') || 'https://cribly.com';
-        this.supportEmail =
-            this.configService.get<string>('SUPPORT_EMAIL') || 'hello@cribly.com';
-    }
+  constructor(private readonly configService: ConfigService) {
+    this.frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'https://cribly.com';
+    this.supportEmail =
+      this.configService.get<string>('SUPPORT_EMAIL') || 'hello@cribly.com';
+  }
 
-    private getBaseStyles(): string {
-        return `
+  private getBaseStyles(): string {
+    return `
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -181,15 +181,15 @@ export class EmailTemplateService {
         }
       </style>
     `;
-    }
+  }
 
-    /**
-     * Welcome & Email Verification Template
-     */
-    getWelcomeTemplate(context: WelcomeEmailContext): EmailTemplate {
-        const subject = `Welcome to ${this.companyName} - Let's Find Your Perfect Home! 🏠`;
+  /**
+   * Welcome & Email Verification Template
+   */
+  getWelcomeTemplate(context: WelcomeEmailContext): EmailTemplate {
+    const subject = `Welcome to ${this.companyName} - Let's Find Your Perfect Home! 🏠`;
 
-        const html = `
+    const html = `
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -246,7 +246,7 @@ export class EmailTemplateService {
       </html>
     `;
 
-        const text = `
+    const text = `
       Welcome to ${this.companyName}!
       
       Hey ${context.firstName},
@@ -269,16 +269,16 @@ export class EmailTemplateService {
       This verification link expires in 24 hours.
     `;
 
-        return { subject, html, text };
-    }
+    return { subject, html, text };
+  }
 
-    /**
-     * Password Reset Template
-     */
-    getPasswordResetTemplate(context: PasswordResetContext): EmailTemplate {
-        const subject = `Reset Your ${this.companyName} Password - Secure & Quick`;
+  /**
+   * Password Reset Template
+   */
+  getPasswordResetTemplate(context: PasswordResetContext): EmailTemplate {
+    const subject = `Reset Your ${this.companyName} Password - Secure & Quick`;
 
-        const html = `
+    const html = `
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -334,7 +334,7 @@ export class EmailTemplateService {
       </html>
     `;
 
-        const text = `
+    const text = `
       Password Reset - ${this.companyName}
       
       Hi ${context.firstName},
@@ -353,21 +353,21 @@ export class EmailTemplateService {
       The ${this.companyName} Security Team
     `;
 
-        return { subject, html, text };
-    }
+    return { subject, html, text };
+  }
 
-    /**
-     * Match Notification Template
-     */
-    getMatchNotificationTemplate(
-        context: MatchNotificationContext,
-    ): EmailTemplate {
-        const matchTypeText =
-            context.matchType === 'property' ? 'Property Match' : 'Roommate Match';
-        const emoji = context.matchType === 'property' ? '🏠' : '👥';
-        const subject = `${emoji} You've Got a ${matchTypeText} - "${context.matchTitle}"`;
+  /**
+   * Match Notification Template
+   */
+  getMatchNotificationTemplate(
+    context: MatchNotificationContext,
+  ): EmailTemplate {
+    const matchTypeText =
+      context.matchType === 'property' ? 'Property Match' : 'Roommate Match';
+    const emoji = context.matchType === 'property' ? '🏠' : '👥';
+    const subject = `${emoji} You've Got a ${matchTypeText} - "${context.matchTitle}"`;
 
-        const html = `
+    const html = `
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -427,7 +427,7 @@ export class EmailTemplateService {
       </html>
     `;
 
-        const text = `
+    const text = `
       New ${matchTypeText} - ${this.companyName}
       
       Exciting news, ${context.firstName}!
@@ -451,18 +451,18 @@ export class EmailTemplateService {
       The ${this.companyName} Team
     `;
 
-        return { subject, html, text };
-    }
+    return { subject, html, text };
+  }
 
-    /**
-     * New Message Notification Template
-     */
-    getMessageNotificationTemplate(
-        context: MessageNotificationContext,
-    ): EmailTemplate {
-        const subject = `💬 New message from ${context.senderName} on ${this.companyName}`;
+  /**
+   * New Message Notification Template
+   */
+  getMessageNotificationTemplate(
+    context: MessageNotificationContext,
+  ): EmailTemplate {
+    const subject = `💬 New message from ${context.senderName} on ${this.companyName}`;
 
-        const html = `
+    const html = `
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -515,7 +515,7 @@ export class EmailTemplateService {
       </html>
     `;
 
-        const text = `
+    const text = `
       New Message - ${this.companyName}
       
       Hi ${context.firstName}!
@@ -532,16 +532,16 @@ export class EmailTemplateService {
       The ${this.companyName} Team
     `;
 
-        return { subject, html, text };
-    }
+    return { subject, html, text };
+  }
 
-    /**
-     * Account Deletion Confirmation Template
-     */
-    getAccountDeletionTemplate(firstName: string): EmailTemplate {
-        const subject = `Account Successfully Deleted - Thank You for Using ${this.companyName}`;
+  /**
+   * Account Deletion Confirmation Template
+   */
+  getAccountDeletionTemplate(firstName: string): EmailTemplate {
+    const subject = `Account Successfully Deleted - Thank You for Using ${this.companyName}`;
 
-        const html = `
+    const html = `
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -591,7 +591,7 @@ export class EmailTemplateService {
       </html>
     `;
 
-        const text = `
+    const text = `
       Account Successfully Deleted - ${this.companyName}
       
       Goodbye ${firstName},
@@ -614,6 +614,6 @@ export class EmailTemplateService {
       The ${this.companyName} Team
     `;
 
-        return { subject, html, text };
-    }
+    return { subject, html, text };
+  }
 }
