@@ -8,7 +8,7 @@ import {
   Min,
   Max,
   Length,
-  IsDateString
+  IsDateString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -65,7 +65,9 @@ export class CreateRoommateProfileDto {
 
   @ApiProperty({ description: 'Occupation/job title' })
   @IsString()
-  @Length(2, 100, { message: 'Occupation must be between 2 and 100 characters' })
+  @Length(2, 100, {
+    message: 'Occupation must be between 2 and 100 characters',
+  })
   occupation: string;
 
   @ApiPropertyOptional({ description: 'Array of interests/hobbies' })
@@ -74,13 +76,17 @@ export class CreateRoommateProfileDto {
   @IsString({ each: true })
   interests?: string[];
 
-  @ApiProperty({ description: 'Budget range for accommodation (CAD per month)' })
+  @ApiProperty({
+    description: 'Budget range for accommodation (CAD per month)',
+  })
   @IsNumber()
   @Min(200, { message: 'Budget must be at least $200 CAD' })
   @Max(5000, { message: 'Budget must be less than $5000 CAD' })
   budgetMin: number;
 
-  @ApiProperty({ description: 'Maximum budget for accommodation (CAD per month)' })
+  @ApiProperty({
+    description: 'Maximum budget for accommodation (CAD per month)',
+  })
   @IsNumber()
   @Min(200, { message: 'Budget must be at least $200 CAD' })
   @Max(5000, { message: 'Budget must be less than $5000 CAD' })
@@ -99,11 +105,17 @@ export class CreateRoommateProfileDto {
   @IsEnum(PetPreference)
   petPreference: PetPreference;
 
-  @ApiProperty({ enum: CleanlinessLevel, description: 'Cleanliness level preference' })
+  @ApiProperty({
+    enum: CleanlinessLevel,
+    description: 'Cleanliness level preference',
+  })
   @IsEnum(CleanlinessLevel)
   cleanlinessLevel: CleanlinessLevel;
 
-  @ApiProperty({ enum: SocialLevel, description: 'Social interaction preference' })
+  @ApiProperty({
+    enum: SocialLevel,
+    description: 'Social interaction preference',
+  })
   @IsEnum(SocialLevel)
   socialLevel: SocialLevel;
 
@@ -125,6 +137,8 @@ export class CreateRoommateProfileDto {
   @ApiPropertyOptional({ description: 'Additional notes or requirements' })
   @IsOptional()
   @IsString()
-  @Length(0, 500, { message: 'Additional notes must be less than 500 characters' })
+  @Length(0, 500, {
+    message: 'Additional notes must be less than 500 characters',
+  })
   additionalNotes?: string;
 }

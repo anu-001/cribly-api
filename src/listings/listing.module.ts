@@ -5,9 +5,9 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { GeolocationService } from '../common/services/geolocation.service';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [ListingController],
-    providers: [ListingService, GeolocationService],
-    exports: [ListingService],
+  imports: [PrismaModule],
+  controllers: [ListingController],
+  providers: [ListingService, GeolocationService],
+  exports: [ListingService],
 })
-export class ListingModule { }
+export class ListingModule {}

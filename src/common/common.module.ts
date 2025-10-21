@@ -6,17 +6,17 @@ import { HealthService } from './services/health.service';
 
 @Global()
 @Module({
-    providers: [
-        TokenBlacklistService,
-        SecurityService,
-        CacheService,
-        HealthService,
-    ],
-    exports: [
-        TokenBlacklistService,
-        SecurityService,
-        CacheService,
-        HealthService,
-    ],
+  providers: [
+    TokenBlacklistService,
+    SecurityService,
+    CacheService,
+    HealthService,
+  ],
+  exports: [
+    TokenBlacklistService,
+    SecurityService,
+    CacheService,
+    HealthService,
+  ],
 })
-export class CommonModule { }
+export class CommonModule {}

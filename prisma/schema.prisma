@@ -280,3 +280,78 @@ enum DevicePlatform {
   ANDROID
   WEB
 }
+
+model RoommateProfile {
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Basic Information
+  age               Int
+  gender            Gender
+  occupation        String?
+  bio               String?
+  
+  // Location Preferences
+  preferredCities   String[]
+  
+  // Budget Information
+  budgetMin         Float
+  budgetMax         Float
+  
+  // Lifestyle Preferences
+  smokingPreference SmokingPreference  @default(NO_PREFERENCE)
+  petPreference     PetPreference      @default(NO_PREFERENCE)
+  cleanlinessLevel  CleanlinessLevel   @default(NO_PREFERENCE)
+  socialLevel       SocialLevel        @default(NO_PREFERENCE)
+  
+  // Personal Traits
+  interests         String[]
+  hasPets           Boolean            @default(false)
+  isSmoke           Boolean            @default(false)
+  
+  // Timestamps
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  @@index([userId])
+  @@index([age])
+  @@index([gender])
+  @@index([budgetMin, budgetMax])
+  @@index([createdAt])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum SmokingPreference {
+  SMOKER
+  NON_SMOKER
+  OCCASIONAL
+  NO_PREFERENCE
+}
+
+enum PetPreference {
+  LOVES_PETS
+  NO_PETS
+  SMALL_PETS_ONLY
+  NO_PREFERENCE
+}
+
+enum CleanlinessLevel {
+  VERY_CLEAN
+  MODERATELY_CLEAN
+  RELAXED
+  NO_PREFERENCE
+}
+
+enum SocialLevel {
+  VERY_SOCIAL
+  MODERATELY_SOCIAL
+  PREFER_QUIET
+  NO_PREFERENCE
+}

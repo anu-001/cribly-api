@@ -18,7 +18,6 @@ import { CommonModule } from './common/common.module';
 import { RoommatesModule } from './roommates/roommates.module';
 
 // Guards, Interceptors, and Filters
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -29,74 +28,74 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 
 @Module({
-    imports: [
-        // Core Configuration
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: '.env',
-            load: [appConfig],
-        }),
+  imports: [
+    // Core Configuration
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      load: [appConfig],
+    }),
 
-        // Rate Limiting
-        ThrottlerModule.forRoot([
-            {
-                ttl: 60 * 1000, // 1 minute
-                limit: 100, // 100 requests per minute
-            },
-        ]),
+    // Rate Limiting
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60 * 1000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+    ]),
 
-        // Database
-        PrismaModule,
+    // Database
+    PrismaModule,
 
-        // Common Services
-        CommonModule,
+    // Common Services
+    CommonModule,
 
-        // Feature Modules
-        AuthModule,
-        UserModule,
-        ListingModule,
-        RoommatesModule,
-        MatchModule,
-        ChatModule,
-        NotificationModule,
-        CloudinaryModule,
-        HealthModule,
-    ],
-    controllers: [AppController],
-    providers: [
-        // Global Exception Filter
-        {
-            provide: APP_FILTER,
-            useClass: GlobalExceptionFilter,
-        },
+    // Feature Modules
+    AuthModule,
+    UserModule,
+    ListingModule,
+    RoommatesModule,
+    MatchModule,
+    ChatModule,
+    NotificationModule,
+    CloudinaryModule,
+    HealthModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    // Global Exception Filter
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
 
-        // Global Guards
-        {
-            provide: APP_GUARD,
-            useClass: ThrottlerGuard,
-        },
+    // Global Guards
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
 
-        // Global Interceptors
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: SanitizationInterceptor,
-        },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: CacheInterceptor,
-        },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: LoggingInterceptor,
-        },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: ResponseInterceptor,
-        },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: TransformInterceptor,
-        },
-    ],
+    // Global Interceptors
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SanitizationInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}
