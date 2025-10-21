@@ -9,6 +9,7 @@ import {
   MessageNotificationContext,
 } from './templates/email-template.interface';
 import * as admin from 'firebase-admin';
+import type { Prisma, NotificationType, DevicePlatform } from '@prisma/client';
 import { Resend } from 'resend';
 
 @Injectable()
@@ -42,9 +43,31 @@ export class NotificationService {
     userId: string,
     title: string,
     body: string,
-    data?: Record<string, any>,
+    data?: Prisma.InputJsonValue,
   ) {
     try {
+      const isRecordWithType = (v: Prisma.InputJsonValue): boolean => {
+        return (
+          v !== null &&
+          typeof v === 'object' &&
+          !Array.isArray(v) &&
+          'type' in (v as Record<string, unknown>)
+        );
+      };
+      // normalize data for FCM (string map) and for DB storage
+      const fcmData: Record<string, string> = {};
+      if (data && typeof data === 'object') {
+        try {
+          const obj = data as Record<string, unknown>;
+          Object.keys(obj).forEach((k) => {
+            const v = obj[k];
+            fcmData[k] = v === undefined || v === null ? '' : String(v);
+          });
+        } catch (e) {
+          // fallback: stringify entire payload
+          fcmData.payload = JSON.stringify(data);
+        }
+      }
       // Get user's device tokens
       const deviceTokens = await this.prismaService.deviceToken.findMany({
         where: { userId },
@@ -65,7 +88,7 @@ export class NotificationService {
           title,
           body,
         },
-        data: data || {},
+        data: fcmData,
         android: {
           notification: {
             clickAction: 'FLUTTER_NOTIFICATION_CLICK',
@@ -104,13 +127,17 @@ export class NotificationService {
       }
 
       // Store notification in database
+      const notificationType = isRecordWithType(data)
+        ? ((data as Record<string, unknown>).type as NotificationType)
+        : ('SYSTEM_UPDATE' as NotificationType);
+
       await this.prismaService.notification.create({
         data: {
           userId,
           title,
           body,
-          type: data?.type || 'SYSTEM_UPDATE',
-          data: data || {},
+          type: notificationType,
+          data: (data as Prisma.InputJsonValue) || {},
           isSent: response.successCount > 0,
         },
       });
@@ -225,7 +252,10 @@ export class NotificationService {
     }
   }
 
-  async sendMatchAcceptedNotification(userId: string, matchData: any) {
+  async sendMatchAcceptedNotification(
+    userId: string,
+    matchData: { matchId: string; listingTitle?: string; chatId?: string },
+  ) {
     const title = 'Match Accepted!';
     const body = `Your match request for "${matchData.listingTitle}" was accepted!`;
 
@@ -289,7 +319,11 @@ export class NotificationService {
     }
   }
 
-  async registerDeviceToken(userId: string, token: string, platform: string) {
+  async registerDeviceToken(
+    userId: string,
+    token: string,
+    platform: DevicePlatform | string,
+  ) {
     try {
       // Check if token already exists
       const existingToken = await this.prismaService.deviceToken.findUnique({
@@ -312,7 +346,7 @@ export class NotificationService {
         data: {
           userId,
           token,
-          platform: platform as any, // TODO: Fix once Prisma client syncs with enum
+          platform: platform as DevicePlatform, // TODO: Fix once Prisma client syncs with enum
         },
       });
 
@@ -395,6 +429,16 @@ export class NotificationService {
       return { success: true };
     } catch (error) {
       this.logger.error('Mark all notifications as read failed', error);
+      throw error;
+    }
+  }
+
+  async removeDeviceToken(token: string) {
+    try {
+      await this.prismaService.deviceToken.deleteMany({ where: { token } });
+      return { success: true };
+    } catch (error) {
+      this.logger.error('Remove device token failed', error);
       throw error;
     }
   }

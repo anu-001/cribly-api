@@ -64,7 +64,7 @@ export class CreateNotificationDto {
   })
   @IsObject()
   @IsOptional()
-  data?: any;
+  data?: Record<string, unknown>;
 
   @ApiProperty({
     description: 'Optional image URL for rich notifications',

@@ -128,6 +128,87 @@ Most endpoints require a valid JWT token. Obtain one by registering/logging in v
         methodKey,
     });
 
+    // Add reusable component schemas and example responses
+    document.components = document.components || { schemas: {} };
+    document.components.schemas = {
+      ...document.components.schemas,
+      User: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'usr_01H...' },
+          email: { type: 'string', example: 'jane.doe@cribly.app' },
+          name: { type: 'string', example: 'Jane Doe' },
+          avatarUrl: {
+            type: 'string',
+            example: 'https://res.cloudinary.com/xyz/avatar.jpg',
+          },
+        },
+      },
+      Message: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'msg_01H...' },
+          conversationId: { type: 'string', example: 'conv_01H...' },
+          senderId: { type: 'string', example: 'usr_01H...' },
+          content: {
+            type: 'string',
+            example: 'Hi — is this place still available?',
+          },
+          type: { type: 'string', example: 'TEXT' },
+          mediaUrl: {
+            type: 'string',
+            example: 'https://res.cloudinary.com/xyz/photo.jpg',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+            example: '2025-10-20T12:34:56Z',
+          },
+          delivered: { type: 'boolean', example: true },
+          read: { type: 'boolean', example: false },
+        },
+      },
+      Conversation: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'conv_01H...' },
+          participants: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/User' },
+          },
+          lastMessage: { $ref: '#/components/schemas/Message' },
+          unreadCount: { type: 'number', example: 2 },
+        },
+      },
+      Listing: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'lst_01H...' },
+          title: { type: 'string', example: 'Cozy 2BR near downtown' },
+          price: { type: 'number', example: 1500 },
+          city: { type: 'string', example: 'Toronto' },
+          images: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: 'https://res.cloudinary.com/xyz/listing.jpg',
+            },
+          },
+        },
+      },
+      ErrorResponse: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 400 },
+          message: { type: 'string', example: 'Invalid request payload' },
+          error: { type: 'string', example: 'Bad Request' },
+        },
+      },
+    };
+
+    // Attach example responses to some common operations using vendor extensions (used by Swagger UI)
+    document.paths = document.paths || {};
+
     // Custom CSS for better UI
     const customCss = `
             .swagger-ui .topbar { display: none; }
