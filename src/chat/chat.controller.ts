@@ -36,7 +36,7 @@ import {
 type AuthenticatedRequest = ExpressRequest & { user: { id: string } };
 
 @ApiTags('Chat & Messaging')
-@Controller('api/v1/chat')
+  @Controller('chat')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ChatController {

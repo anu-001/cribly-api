@@ -12,7 +12,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CloudinaryService } from '../../common/services/cloudinary.service';
 
 @ApiTags('Chat File Upload')
-@Controller('api/v1/chat/upload')
+  @Controller('chat/upload')
 @UseGuards(JwtAuthGuard)
 export class ChatUploadController {
   constructor(private cloudinaryService: CloudinaryService) {}

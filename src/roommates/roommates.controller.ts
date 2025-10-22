@@ -28,7 +28,7 @@ import {
 } from './dto';
 
 @ApiTags('Roommates')
-@Controller('api/v1/roommates')
+  @Controller('roommates')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class RoommatesController {

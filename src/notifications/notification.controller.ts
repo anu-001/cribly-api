@@ -32,7 +32,7 @@ import type { Prisma } from '@prisma/client';
 type AuthUser = { id: string; email?: string; roles?: string[] };
 
 @ApiTags('Notifications')
-@Controller('api/v1/notifications')
+    @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class NotificationController {

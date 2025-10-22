@@ -16,6 +16,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HealthModule } from './health/health.module';
 import { CommonModule } from './common/common.module';
 import { RoommatesModule } from './roommates/roommates.module';
+import { SearchModule } from './search/search.module';
 
 // Guards, Interceptors, and Filters
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -60,6 +61,7 @@ import { AppController } from './app.controller';
     NotificationModule,
     CloudinaryModule,
     HealthModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
