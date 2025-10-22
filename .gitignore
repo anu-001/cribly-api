@@ -18,7 +18,7 @@ lerna-debug.log*
 .env.development
 .env.test
 .env.production
-
+.env-old
 # temp directory
 .temp
 .tmp
@@ -28,3 +28,5 @@ lerna-debug.log*
 docs
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
+
+/generated/prisma
