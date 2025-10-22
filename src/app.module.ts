@@ -12,6 +12,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { VerificationModule } from './verification/verification.module';
 import { ListingsModule } from './listings/listings.module';
 import { RoommateProfilesModule } from './roommate-profiles/roommate-profiles.module';
+import { ExploreModule } from './explore/explore.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RoommateProfilesModule } from './roommate-profiles/roommate-profiles.mo
     VerificationModule,
     ListingsModule,
     RoommateProfilesModule,
+    ExploreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
