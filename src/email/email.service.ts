@@ -460,9 +460,8 @@ export class EmailService {
         </p>
       </div>
 
-      ${
-        remainingAttempts > 0
-          ? `
+      ${remainingAttempts > 0
+                ? `
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 30px 0;">
         <h2 style="color: white; margin: 0 0 10px 0;">Try Again</h2>
         <p style="color: white; margin: 0;">You have <strong>${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''}</strong> remaining today.</p>
@@ -483,7 +482,7 @@ export class EmailService {
         <li>Hold the ID steady when capturing</li>
       </ul>
       `
-          : `
+                : `
       <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
         <p style="margin: 0; color: #78350f;">
           <strong>Daily Limit Reached:</strong> You've used all 3 verification attempts for today. Please try again tomorrow.
@@ -492,7 +491,7 @@ export class EmailService {
 
       <p>If you continue to experience issues, please contact our support team for assistance.</p>
       `
-      }
+            }
 
       <p style="color: #666; font-size: 14px; margin-top: 30px;">
         If you have questions or need help, reply to this email or contact our support team.
