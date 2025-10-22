@@ -46,36 +46,80 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Roommate & Rental Platform API')
+    .setTitle('Cribly - Roommate & Rental Platform API')
     .setDescription(
-      'Production-grade API for connecting renters, roommate seekers, landlords, and agents. Features include property listings, roommate matching, messaging, and more.',
+      'Production-grade API for connecting renters, roommate seekers, landlords, and agents.\n\n' +
+      '## Features\n' +
+      '- 🔐 JWT Authentication with refresh tokens\n' +
+      '- ✅ ID Verification with AWS Rekognition\n' +
+      '- 🏠 Property Listings with geospatial search\n' +
+      '- 👥 Roommate Matching with compatibility scoring\n' +
+      '- 📁 Secure file uploads with virus scanning\n' +
+      '- 🔍 Unified discovery & search engine\n' +
+      '- 💬 Real-time messaging (coming soon)\n\n' +
+      '## Authentication\n' +
+      'Use the **Authorize** button to add your JWT token. Get your token from `/auth/signin` or `/auth/signup` endpoints.\n\n' +
+      '## Rate Limits\n' +
+      '- Default: 100 requests/minute\n' +
+      '- Auth endpoints: 5 requests/minute\n' +
+      '- Verification: 3 attempts/day\n\n' +
+      '## Base URL\n' +
+      'All endpoints are prefixed with `/api/v1/`',
     )
-    .setVersion('1.0')
+    .setVersion('1.0.0')
+    .setContact(
+      'Cribly Support',
+      'https://cribly.com',
+      'support@cribly.com',
+    )
+    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
         name: 'JWT',
-        description: 'Enter JWT access token',
+        description: 'Enter JWT access token received from /auth/signin or /auth/signup',
         in: 'header',
       },
       'JWT-auth',
     )
-    .addTag('Auth', 'Authentication and authorization endpoints')
-    .addTag('Users', 'User profile management')
-    .addTag('Property Listings', 'Property listing CRUD operations')
-    .addTag('Roommate Profiles', 'Roommate seeker profile management')
-    .addTag('Agent Profiles', 'Real estate agent profile management')
-    .addTag('Connections', 'Connection requests between users')
-    .addTag('Messaging', 'Real-time messaging system')
-    .addTag('Favorites', 'User favorites/bookmarks')
-    .addTag('Notifications', 'Notification system')
-    .addTag('Search', 'Search and discovery features')
+    .addCookieAuth(
+      'refreshToken',
+      {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'refreshToken',
+        description: 'Refresh token stored in HTTP-only cookie',
+      },
+      'refresh-token',
+    )
+    .addTag('Health', 'API health check endpoints')
+    .addTag('Auth', 'Authentication and authorization endpoints - signup, signin, logout')
+    .addTag('Users', 'User profile management - view, update, delete profiles')
+    .addTag('uploads', 'File upload service - images, documents with virus scanning')
+    .addTag('verification', 'ID verification system - identity verification flow')
+    .addTag('listings', 'Property listing CRUD - create, search, manage listings')
+    .addTag('roommate-profiles', 'Roommate seeker profiles - matching and preferences')
+    .addTag('explore', 'Unified discovery & search - search listings and profiles together')
+    .addTag('favorites', 'User favorites/bookmarks - save and manage favorite listings')
+    .addTag('connections', 'Connection requests - inquiries and matching between users')
+    .addTag('messaging', 'Real-time messaging system - chat functionality')
+    .addTag('notifications', 'Notification system - in-app, email, push notifications')
+    .addServer('http://localhost:3001', 'Local development server')
+    .addServer('https://api-staging.cribly.com', 'Staging server')
+    .addServer('https://api.cribly.com', 'Production server')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'Cribly API Documentation',
+    customfavIcon: 'https://cribly.com/favicon.ico',
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info { margin: 20px 0; }
+      .swagger-ui .info .title { font-size: 36px; }
+    `,
     swaggerOptions: {
       persistAuthorization: true,
       docExpansion: 'none',
@@ -83,7 +127,17 @@ async function bootstrap() {
       showRequestDuration: true,
       tagsSorter: 'alpha',
       operationsSorter: 'alpha',
+      deepLinking: true,
+      displayRequestDuration: true,
+      defaultModelsExpandDepth: 3,
+      defaultModelExpandDepth: 3,
+      syntaxHighlight: {
+        activate: true,
+        theme: 'monokai',
+      },
+      tryItOutEnabled: true,
     },
+    explorer: true,
   });
 
   const port = configService.get('PORT') || 3001;

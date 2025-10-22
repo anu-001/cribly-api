@@ -25,7 +25,7 @@ import {
 } from './dto';
 
 @ApiTags('verification')
-@Controller('api/v1/verification')
+@Controller('verification')
 export class VerificationController {
     constructor(private readonly verificationService: VerificationService) {}
 
@@ -37,7 +37,7 @@ export class VerificationController {
     @UseGuards(JwtAuthGuard)
     @Throttle({ default: { limit: 3, ttl: 86400000 } }) // 3 requests per 24 hours
     @HttpCode(HttpStatus.OK)
-    @ApiBearerAuth()
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Initiate ID verification',
         description: 'Start the identity verification process. Rate limited to 3 attempts per 24 hours.',
@@ -70,7 +70,7 @@ export class VerificationController {
      */
     @Get('status')
     @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Get verification status',
         description: 'Retrieve the current verification status and attempt history',
@@ -147,7 +147,7 @@ export class VerificationController {
     @Get('stats')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('ADMIN')
-    @ApiBearerAuth()
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Get verification statistics',
         description: 'Retrieve system-wide verification statistics. Admin only.',

@@ -36,10 +36,10 @@ import {
     UploadUseCase,
 } from './dto';
 
-@ApiTags('Uploads')
+@ApiTags('uploads')
 @Controller('uploads')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class UploadsController {
     private readonly logger = new Logger(UploadsController.name);
 

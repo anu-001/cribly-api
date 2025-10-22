@@ -29,7 +29,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @ApiTags('Users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class UsersController {
     constructor(private usersService: UsersService) { }
 

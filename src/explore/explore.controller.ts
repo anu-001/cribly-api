@@ -5,7 +5,7 @@ import { QueryExploreDto } from './dto';
 import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('explore')
-@Controller('api/v1/explore')
+@Controller('explore')
 export class ExploreController {
   constructor(private readonly exploreService: ExploreService) {}
 

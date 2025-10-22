@@ -20,7 +20,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('listings')
-@Controller('api/v1/listings')
+@Controller('listings')
 export class ListingsController {
     constructor(private readonly listingsService: ListingsService) { }
 
@@ -82,10 +82,10 @@ export class ListingsController {
      */
     @Get('my/all')
     @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Get my listings',
-        description: 'Retrieve all listings created by the current user',
+        description: 'Retrieve all listings created by the current user with pagination',
     })
     @ApiResponse({
         status: 200,
@@ -132,10 +132,10 @@ export class ListingsController {
      */
     @Put(':id')
     @UseGuards(JwtAuthGuard, VerifiedUserGuard)
-    @ApiBearerAuth()
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Update a listing',
-        description: 'Update a property listing. Only the owner can update their listing.',
+        description: 'Update a property listing. Only the owner can update their listing. Requires verified user status.',
     })
     @ApiResponse({
         status: 200,
@@ -151,7 +151,7 @@ export class ListingsController {
     })
     @ApiResponse({
         status: 403,
-        description: 'Forbidden - Not the listing owner',
+        description: 'Forbidden - Not the listing owner or user not verified',
     })
     @ApiResponse({
         status: 404,
@@ -172,7 +172,7 @@ export class ListingsController {
     @Delete(':id')
     @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.OK)
-    @ApiBearerAuth()
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Delete a listing',
         description: 'Soft delete a property listing. Only the owner can delete their listing.',

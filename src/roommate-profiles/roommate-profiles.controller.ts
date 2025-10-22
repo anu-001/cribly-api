@@ -29,7 +29,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('roommate-profiles')
-@Controller('api/v1/roommate-profiles')
+@Controller('roommate-profiles')
 export class RoommateProfilesController {
   constructor(
     private readonly roommateProfilesService: RoommateProfilesService,
@@ -37,7 +37,7 @@ export class RoommateProfilesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, VerifiedUserGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create roommate profile (verified users only)' })
   @ApiResponse({
     status: 201,
@@ -79,7 +79,7 @@ export class RoommateProfilesController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get current user roommate profile' })
   @ApiResponse({ status: 200, description: 'Current user roommate profile' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -99,7 +99,7 @@ export class RoommateProfilesController {
 
   @Put('me')
   @UseGuards(JwtAuthGuard, VerifiedUserGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update current user roommate profile' })
   @ApiResponse({
     status: 200,
@@ -124,7 +124,7 @@ export class RoommateProfilesController {
 
   @Delete('me')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete current user roommate profile' })
   @ApiResponse({
