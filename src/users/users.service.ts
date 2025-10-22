@@ -104,6 +104,19 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
+        // CRITICAL: Protect verified user data - firstName, lastName, dateOfBirth are immutable after verification
+        if (existingUser.verificationStatus === 'VERIFIED') {
+            const protectedFields = ['firstName', 'lastName', 'dateOfBirth'];
+            const attemptedChanges = protectedFields.filter((field) => field in updateUserDto);
+
+            if (attemptedChanges.length > 0) {
+                throw new ForbiddenException(
+                    `Cannot modify ${attemptedChanges.join(', ')} after verification. ` +
+                    'These fields are locked based on your verified ID document.',
+                );
+            }
+        }
+
         // If email is being updated, check if it's already taken
         if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
             const emailExists = await this.prisma.user.findUnique({

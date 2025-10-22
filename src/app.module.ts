@@ -4,10 +4,12 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { UsersModule } from './users/users.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -22,10 +24,12 @@ import { UploadsModule } from './uploads/uploads.module';
       },
     ]),
     PrismaModule,
+    RedisModule, // Global module for caching and rate limiting
     EmailModule,
     AuthModule,
     UsersModule,
     UploadsModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

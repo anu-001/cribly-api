@@ -381,4 +381,123 @@ export class EmailService {
     `;
         return this.getBaseTemplate(content);
     }
+
+    /**
+     * Send verification success email
+     */
+    async sendVerificationSuccessEmail(to: string, name: string): Promise<boolean> {
+        const subject = '✅ Identity Verification Successful!';
+        const html = this.getVerificationSuccessTemplate(name);
+        return this.sendEmail({ to, subject, html });
+    }
+
+    /**
+     * Send verification failure email
+     */
+    async sendVerificationFailureEmail(
+        to: string,
+        name: string,
+        reason: string,
+        remainingAttempts: number,
+    ): Promise<boolean> {
+        const subject = '❌ Identity Verification Failed';
+        const html = this.getVerificationFailureTemplate(name, reason, remainingAttempts);
+        return this.sendEmail({ to, subject, html });
+    }
+
+    /**
+     * Verification success email template
+     */
+    private getVerificationSuccessTemplate(name: string): string {
+        const content = `
+      <h1 style="color: #7c3aed; margin-bottom: 20px;">🎉 Verification Complete!</h1>
+      <p>Hi ${name},</p>
+      <p>Great news! Your identity has been successfully verified.</p>
+      
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h2 style="color: white; margin: 0 0 10px 0;">✅ You're All Set!</h2>
+        <p style="color: white; margin: 0;">You now have full access to all Cribly features:</p>
+        <ul style="color: white; margin: 15px 0 0 20px;">
+          <li>Create property listings</li>
+          <li>Build your roommate profile</li>
+          <li>Connect with verified users</li>
+          <li>Send and receive messages</li>
+        </ul>
+      </div>
+
+      <p>Your profile has been updated with your verified information:</p>
+      <ul>
+        <li>✓ First Name & Last Name (from ID)</li>
+        <li>✓ Date of Birth (from ID)</li>
+        <li>✓ Verification Badge</li>
+      </ul>
+
+      <p style="color: #666; font-size: 14px; margin-top: 30px;">
+        <strong>Note:</strong> Your verified information (name and date of birth) cannot be changed as it matches your government-issued ID.
+      </p>
+
+      <p>Start exploring verified listings and connect with verified roommates today!</p>
+    `;
+        return this.getBaseTemplate(content);
+    }
+
+    /**
+     * Verification failure email template
+     */
+    private getVerificationFailureTemplate(
+        name: string,
+        reason: string,
+        remainingAttempts: number,
+    ): string {
+        const content = `
+      <h1 style="color: #ef4444; margin-bottom: 20px;">Verification Update</h1>
+      <p>Hi ${name},</p>
+      <p>Unfortunately, your identity verification was not successful.</p>
+      
+      <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #7f1d1d;">
+          <strong>Reason:</strong> ${reason}
+        </p>
+      </div>
+
+      ${
+        remainingAttempts > 0
+          ? `
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h2 style="color: white; margin: 0 0 10px 0;">Try Again</h2>
+        <p style="color: white; margin: 0;">You have <strong>${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''}</strong> remaining today.</p>
+        <p style="color: white; margin: 10px 0 0 0;">
+          <a href="${this.configService.get<string>('FRONTEND_URL')}/verification" 
+             style="display: inline-block; background: white; color: #7c3aed; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">
+            Retry Verification
+          </a>
+        </p>
+      </div>
+
+      <h3>Tips for Successful Verification:</h3>
+      <ul>
+        <li>Ensure good lighting when taking photos</li>
+        <li>Use a valid, non-expired government ID</li>
+        <li>Make sure all text on the ID is clearly visible</li>
+        <li>Remove any glare or reflections</li>
+        <li>Hold the ID steady when capturing</li>
+      </ul>
+      `
+          : `
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #78350f;">
+          <strong>Daily Limit Reached:</strong> You've used all 3 verification attempts for today. Please try again tomorrow.
+        </p>
+      </div>
+
+      <p>If you continue to experience issues, please contact our support team for assistance.</p>
+      `
+      }
+
+      <p style="color: #666; font-size: 14px; margin-top: 30px;">
+        If you have questions or need help, reply to this email or contact our support team.
+      </p>
+    `;
+        return this.getBaseTemplate(content);
+    }
 }
