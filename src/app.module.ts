@@ -13,6 +13,8 @@ import { VerificationModule } from './verification/verification.module';
 import { ListingsModule } from './listings/listings.module';
 import { RoommateProfilesModule } from './roommate-profiles/roommate-profiles.module';
 import { ExploreModule } from './explore/explore.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { ConnectionsModule } from './connections/connections.module';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { ExploreModule } from './explore/explore.module';
     ListingsModule,
     RoommateProfilesModule,
     ExploreModule,
+    FavoritesModule,
+    ConnectionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
