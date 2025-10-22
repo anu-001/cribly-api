@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { VerificationModule } from './verification/verification.module';
 import { ListingsModule } from './listings/listings.module';
+import { RoommateProfilesModule } from './roommate-profiles/roommate-profiles.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ListingsModule } from './listings/listings.module';
     UploadsModule,
     VerificationModule,
     ListingsModule,
+    RoommateProfilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
