@@ -10,6 +10,7 @@ import { EmailModule } from './email/email.module';
 import { UsersModule } from './users/users.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { VerificationModule } from './verification/verification.module';
+import { ListingsModule } from './listings/listings.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { VerificationModule } from './verification/verification.module';
     UsersModule,
     UploadsModule,
     VerificationModule,
+    ListingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
