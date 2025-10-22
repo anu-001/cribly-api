@@ -111,9 +111,8 @@ export class ExploreService {
       limit: 1000, // Get all for merging
     };
 
-    const { data: listings } = await this.listingsService.findAll(
-      listingsQuery,
-    );
+    const { data: listings } =
+      await this.listingsService.findAll(listingsQuery);
 
     // Transform to ExploreResult with scoring
     return listings.map((listing: any) => ({

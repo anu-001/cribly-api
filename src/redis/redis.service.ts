@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -96,5 +101,48 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async ttl(key: string): Promise<number> {
     return this.client.ttl(key);
+  }
+
+  /**
+   * Get JSON value
+   */
+  async getJSON<T>(key: string): Promise<T | null> {
+    const value = await this.get(key);
+    return value ? JSON.parse(value) : null;
+  }
+
+  /**
+   * Set JSON value
+   */
+  async setJSON(key: string, value: any, ttl?: number): Promise<'OK'> {
+    return this.set(key, JSON.stringify(value), ttl);
+  }
+
+  /**
+   * Delete multiple keys
+   */
+  async delMany(keys: string[]): Promise<number> {
+    if (keys.length === 0) return 0;
+    return this.client.del(...keys);
+  }
+
+  /**
+   * Health check
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      const result = await this.client.ping();
+      return result === 'PONG';
+    } catch (error) {
+      this.logger.error('Redis health check failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get the Redis client instance
+   */
+  getClient(): Redis {
+    return this.client;
   }
 }

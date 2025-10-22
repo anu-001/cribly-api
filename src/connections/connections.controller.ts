@@ -70,7 +70,10 @@ export class ConnectionsController {
     @CurrentUser('id') userId: string,
     @Body() createConnectionDto: CreateConnectionDto,
   ) {
-    return this.connectionsService.createConnection(userId, createConnectionDto);
+    return this.connectionsService.createConnection(
+      userId,
+      createConnectionDto,
+    );
   }
 
   @Get()
@@ -150,8 +153,7 @@ export class ConnectionsController {
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Bad request - connection already responded to or has expired',
+    description: 'Bad request - connection already responded to or has expired',
   })
   @ApiResponse({
     status: 401,

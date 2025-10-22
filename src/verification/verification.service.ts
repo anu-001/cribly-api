@@ -313,7 +313,9 @@ export class VerificationService {
     signature: string,
   ): boolean {
     if (!this.webhookSecret) {
-      this.logger.warn('⚠️  Webhook secret not configured, skipping validation');
+      this.logger.warn(
+        '⚠️  Webhook secret not configured, skipping validation',
+      );
       return true; // Skip validation in development if secret not set
     }
 

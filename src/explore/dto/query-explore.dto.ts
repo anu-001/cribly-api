@@ -166,12 +166,7 @@ export class QueryExploreDto {
   })
   @IsOptional()
   @IsString()
-  sortBy?:
-    | 'newest'
-    | 'price_asc'
-    | 'price_desc'
-    | 'recommended'
-    | 'proximity';
+  sortBy?: 'newest' | 'price_asc' | 'price_desc' | 'recommended' | 'proximity';
 
   // Pagination
   @ApiPropertyOptional({

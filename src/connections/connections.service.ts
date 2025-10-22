@@ -73,9 +73,7 @@ export class ConnectionsService {
       });
 
       if (!profile) {
-        throw new NotFoundException(
-          'Roommate profile not found or not active',
-        );
+        throw new NotFoundException('Roommate profile not found or not active');
       }
 
       // Check if connecting to self

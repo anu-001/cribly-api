@@ -16,9 +16,11 @@ import { EmailModule } from '../email/email.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const expiresIn = configService.get<string>('JWT_ACCESS_TOKEN_EXPIRY') || '15m';
+        const expiresIn =
+          configService.get<string>('JWT_ACCESS_TOKEN_EXPIRY') || '15m';
         return {
-          secret: configService.get<string>('JWT_SECRET') || 'default-secret-key',
+          secret:
+            configService.get<string>('JWT_SECRET') || 'default-secret-key',
           signOptions: {
             expiresIn: expiresIn as any,
           },
@@ -38,4 +40,4 @@ import { EmailModule } from '../email/email.module';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

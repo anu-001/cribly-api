@@ -1,12 +1,18 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
@@ -18,14 +24,20 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // CORS
+  const corsOrigin =
+    configService.get('CORS_ORIGIN') || 'http://localhost:3000';
   app.enableCors({
-    origin: configService.get('FRONTEND_URL') || 'http://localhost:3000',
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    exposedHeaders: ['X-Request-ID'],
   });
 
-  // Global validation pipe
+  // Global prefix
+  app.setGlobalPrefix('api/v1');
+
+  // Global pipes
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -37,8 +49,16 @@ async function bootstrap() {
     }),
   );
 
+  // Global filters
+  app.useGlobalFilters(new PrismaExceptionFilter(), new HttpExceptionFilter());
+
+  // Global interceptors
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new TransformInterceptor(),
+  );
+
   // API versioning
-  app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
@@ -67,11 +87,7 @@ async function bootstrap() {
       'All endpoints are prefixed with `/api/v1/`',
     )
     .setVersion('1.0.0')
-    .setContact(
-      'Cribly Support',
-      'https://cribly.com',
-      'support@cribly.com',
-    )
+    .setContact('Cribly Support', 'https://cribly.com', 'support@cribly.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addBearerAuth(
       {
@@ -79,7 +95,8 @@ async function bootstrap() {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         name: 'JWT',
-        description: 'Enter JWT access token received from /auth/signin or /auth/signup',
+        description:
+          'Enter JWT access token received from /auth/signin or /auth/signup',
         in: 'header',
       },
       'JWT-auth',
@@ -95,17 +112,44 @@ async function bootstrap() {
       'refresh-token',
     )
     .addTag('Health', 'API health check endpoints')
-    .addTag('Auth', 'Authentication and authorization endpoints - signup, signin, logout')
+    .addTag(
+      'Auth',
+      'Authentication and authorization endpoints - signup, signin, logout',
+    )
     .addTag('Users', 'User profile management - view, update, delete profiles')
-    .addTag('uploads', 'File upload service - images, documents with virus scanning')
-    .addTag('verification', 'ID verification system - identity verification flow')
-    .addTag('listings', 'Property listing CRUD - create, search, manage listings')
-    .addTag('roommate-profiles', 'Roommate seeker profiles - matching and preferences')
-    .addTag('explore', 'Unified discovery & search - search listings and profiles together')
-    .addTag('favorites', 'User favorites/bookmarks - save and manage favorite listings')
-    .addTag('connections', 'Connection requests - inquiries and matching between users')
+    .addTag(
+      'uploads',
+      'File upload service - images, documents with virus scanning',
+    )
+    .addTag(
+      'verification',
+      'ID verification system - identity verification flow',
+    )
+    .addTag(
+      'listings',
+      'Property listing CRUD - create, search, manage listings',
+    )
+    .addTag(
+      'roommate-profiles',
+      'Roommate seeker profiles - matching and preferences',
+    )
+    .addTag(
+      'explore',
+      'Unified discovery & search - search listings and profiles together',
+    )
+    .addTag(
+      'favorites',
+      'User favorites/bookmarks - save and manage favorite listings',
+    )
+    .addTag(
+      'connections',
+      'Connection requests - inquiries and matching between users',
+    )
     .addTag('messaging', 'Real-time messaging system - chat functionality')
-    .addTag('notifications', 'Notification system - in-app, email, push notifications')
+    .addTag(
+      'notifications',
+      'Notification system - in-app, email, push notifications',
+    )
     .addServer('http://localhost:3001', 'Local development server')
     .addServer('https://api-staging.cribly.com', 'Staging server')
     .addServer('https://api.cribly.com', 'Production server')

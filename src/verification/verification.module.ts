@@ -6,9 +6,9 @@ import { RedisModule } from '../redis/redis.module';
 import { EmailModule } from '../email/email.module';
 
 @Module({
-    imports: [PrismaModule, RedisModule, EmailModule],
-    controllers: [VerificationController],
-    providers: [VerificationService],
-    exports: [VerificationService],
+  imports: [PrismaModule, RedisModule, EmailModule],
+  controllers: [VerificationController],
+  providers: [VerificationService],
+  exports: [VerificationService],
 })
 export class VerificationModule {}

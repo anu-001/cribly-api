@@ -1,50 +1,59 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, Matches, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  Matches,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class SignupDto {
-    @ApiProperty({
-        example: 'john.doe@example.com',
-        description: 'User email address',
-    })
-    @IsEmail({}, { message: 'Please provide a valid email address' })
-    email: string;
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'User email address',
+  })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  email: string;
 
-    @ApiProperty({
-        example: 'SecureP@ss123',
-        description: 'Password must be at least 10 characters with uppercase, lowercase, number, and special character',
-        minLength: 10,
-    })
-    @IsString()
-    @MinLength(10, { message: 'Password must be at least 10 characters long' })
-    @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-        message: 'Password must contain uppercase, lowercase, and number or special character',
-    })
-    password: string;
+  @ApiProperty({
+    example: 'SecureP@ss123',
+    description:
+      'Password must be at least 10 characters with uppercase, lowercase, number, and special character',
+    minLength: 10,
+  })
+  @IsString()
+  @MinLength(10, { message: 'Password must be at least 10 characters long' })
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message:
+      'Password must contain uppercase, lowercase, and number or special character',
+  })
+  password: string;
 
-    @ApiProperty({
-        example: 'John',
-        description: 'User first name',
-    })
-    @IsString()
-    @MinLength(2)
-    firstName: string;
+  @ApiProperty({
+    example: 'John',
+    description: 'User first name',
+  })
+  @IsString()
+  @MinLength(2)
+  firstName: string;
 
-    @ApiProperty({
-        example: 'Doe',
-        description: 'User last name',
-    })
-    @IsString()
-    @MinLength(2)
-    lastName: string;
+  @ApiProperty({
+    example: 'Doe',
+    description: 'User last name',
+  })
+  @IsString()
+  @MinLength(2)
+  lastName: string;
 
-    @ApiProperty({
-        enum: UserRole,
-        example: UserRole.USER,
-        description: 'User role',
-        default: UserRole.USER,
-    })
-    @IsEnum(UserRole)
-    @IsOptional()
-    role?: UserRole;
+  @ApiProperty({
+    enum: UserRole,
+    example: UserRole.USER,
+    description: 'User role',
+    default: UserRole.USER,
+  })
+  @IsEnum(UserRole)
+  @IsOptional()
+  role?: UserRole;
 }

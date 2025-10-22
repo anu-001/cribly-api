@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
+import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { UsersModule } from './users/users.module';
@@ -15,6 +17,7 @@ import { RoommateProfilesModule } from './roommate-profiles/roommate-profiles.mo
 import { ExploreModule } from './explore/explore.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { ConnectionsModule } from './connections/connections.module';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
 @Module({
   imports: [
@@ -29,7 +32,8 @@ import { ConnectionsModule } from './connections/connections.module';
       },
     ]),
     PrismaModule,
-    RedisModule, // Global module for caching and rate limiting
+    RedisModule,
+    HealthModule,
     EmailModule,
     AuthModule,
     UsersModule,
@@ -42,6 +46,16 @@ import { ConnectionsModule } from './connections/connections.module';
     ConnectionsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

@@ -277,7 +277,10 @@ export class RoommateProfilesService {
     }
 
     // Validate budget if only one is being updated
-    if (updateDto.minBudget !== undefined && updateDto.maxBudget === undefined) {
+    if (
+      updateDto.minBudget !== undefined &&
+      updateDto.maxBudget === undefined
+    ) {
       if (updateDto.minBudget > existingProfile.maxBudget.toNumber()) {
         throw new BadRequestException(
           'Minimum budget cannot be greater than existing maximum budget',
@@ -285,7 +288,10 @@ export class RoommateProfilesService {
       }
     }
 
-    if (updateDto.maxBudget !== undefined && updateDto.minBudget === undefined) {
+    if (
+      updateDto.maxBudget !== undefined &&
+      updateDto.minBudget === undefined
+    ) {
       if (updateDto.maxBudget < existingProfile.minBudget.toNumber()) {
         throw new BadRequestException(
           'Maximum budget cannot be less than existing minimum budget',
