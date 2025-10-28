@@ -19,11 +19,12 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import axios from 'axios';
+import { InternalVerificationService } from './internal-verification.service';
 
 @Injectable()
 export class VerificationService {
   private readonly logger = new Logger(VerificationService.name);
-  private readonly maxAttemptsPerDay = 3;
+  private readonly maxAttemptsPerDay = 5;
   private readonly tokenExpiryHours = 2;
   private readonly webhookSecret: string;
   private readonly idvProviderBaseUrl: string;
@@ -34,6 +35,7 @@ export class VerificationService {
     private redis: RedisService,
     private emailService: EmailService,
     private configService: ConfigService,
+    private internalVerificationService: InternalVerificationService,
   ) {
     this.webhookSecret =
       this.configService.get<string>('VERIFICATION_WEBHOOK_SECRET') || '';
@@ -62,6 +64,7 @@ export class VerificationService {
     idImageUrl: string,
     selfieImageUrl: string,
   ): Promise<InitiateVerificationResponseDto> {
+    const provider = this.configService.get<string>('VERIFICATION_PROVIDER', 'external');
     // 0. Basic input validation for URLs
     const isValidUrl = (u?: string) => !!u && /^https?:\/\//i.test(u);
     if (!isValidUrl(idImageUrl) || !isValidUrl(selfieImageUrl)) {
@@ -120,6 +123,44 @@ export class VerificationService {
       where: { id: userId },
       data: { verificationStatus: VerificationStatus.PENDING },
     });
+
+    // If using internal provider, run verification synchronously here
+    if (provider.toLowerCase() === 'internal') {
+      try {
+        const result = await this.internalVerificationService.verify(
+          idImageUrl,
+          selfieImageUrl,
+        );
+        const newStatus = result.verified
+          ? VerificationStatus.VERIFIED
+          : VerificationStatus.FAILED;
+
+        await this.prisma.$transaction([
+          this.prisma.verificationAttempt.updateMany({
+            where: { userId, verificationToken },
+            data: {
+              status: newStatus,
+              completedAt: new Date(),
+              failureReason: result.message,
+            },
+          }),
+          this.prisma.user.update({
+            where: { id: userId },
+            data: { verificationStatus: newStatus },
+          }),
+        ]);
+
+        return {
+          verificationUrl: null,
+          verificationToken,
+          expiresAt: expiresAt.toISOString(),
+          remainingAttempts: this.maxAttemptsPerDay - attemptCount - 1,
+        };
+      } catch (e) {
+        this.logger.error(`Internal verification error for ${userId}: ${e.message}`);
+        throw new BadRequestException('Verification failed');
+      }
+    }
 
     // 7. Call AegisID service
     try {

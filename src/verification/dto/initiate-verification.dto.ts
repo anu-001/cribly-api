@@ -7,7 +7,7 @@ export class InitiateVerificationResponseDto {
     description:
       'URL to redirect user to for identity verification (expires in 2 hours)',
   })
-  verificationUrl: string;
+  verificationUrl: string | null;
 
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440000',

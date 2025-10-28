@@ -6,11 +6,12 @@ import { QRVerificationService } from './qr-verification.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
 import { EmailModule } from '../email/email.module';
+import { InternalVerificationService } from './internal-verification.service';
 
 @Module({
   imports: [PrismaModule, RedisModule, EmailModule],
   controllers: [VerificationController, QRVerificationController],
-  providers: [VerificationService, QRVerificationService],
-  exports: [VerificationService, QRVerificationService],
+  providers: [VerificationService, QRVerificationService, InternalVerificationService],
+  exports: [VerificationService, QRVerificationService, InternalVerificationService],
 })
 export class VerificationModule {}
