@@ -10,6 +10,9 @@ import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter'
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env' });
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
