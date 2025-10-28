@@ -36,7 +36,7 @@ export class VerificationController {
   constructor(private readonly verificationService: VerificationService) {}
 
   /**
-   * Initiate ID verification process
+   * Initiate ID verification process with AegisID
    * Rate limited to 3 attempts per 24 hours
    */
   @Post('initiate')
@@ -45,9 +45,9 @@ export class VerificationController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Initiate ID verification',
+    summary: 'Initiate ID verification with AegisID',
     description:
-      'Start the identity verification process. Rate limited to 3 attempts per 24 hours.',
+      'Start the identity verification process using AegisID service. Rate limited to 3 attempts per 24 hours.',
   })
   @ApiResponse({
     status: 200,
@@ -67,6 +67,48 @@ export class VerificationController {
     description: 'Too many attempts',
   })
   async initiateVerification(
+    @CurrentUser('id') userId: string,
+    @Body() body: { idImageUrl: string; selfieImageUrl: string },
+  ): Promise<InitiateVerificationResponseDto> {
+    return this.verificationService.initiateVerificationWithAegisId(
+      userId,
+      body.idImageUrl,
+      body.selfieImageUrl,
+    );
+  }
+
+  /**
+   * Initiate ID verification process (legacy method)
+   * Rate limited to 3 attempts per 24 hours
+   */
+  @Post('initiate-legacy')
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 86400000 } }) // 3 requests per 24 hours
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Initiate ID verification (legacy)',
+    description:
+      'Start the identity verification process using legacy method. Rate limited to 3 attempts per 24 hours.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification initiated successfully',
+    type: InitiateVerificationResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'User already verified or rate limit exceeded',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many attempts',
+  })
+  async initiateVerificationLegacy(
     @CurrentUser('id') userId: string,
   ): Promise<InitiateVerificationResponseDto> {
     return this.verificationService.initiateVerification(userId);

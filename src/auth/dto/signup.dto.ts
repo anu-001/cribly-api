@@ -6,6 +6,9 @@ import {
   Matches,
   IsEnum,
   IsOptional,
+  IsDateString,
+  IsPhoneNumber,
+  MaxLength,
 } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
@@ -56,4 +59,33 @@ export class SignupDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole;
+
+  @ApiProperty({
+    example: '+1-613-555-0101',
+    description: 'User phone number',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  phoneNumber?: string;
+
+  @ApiProperty({
+    example: '1995-03-15',
+    description: 'User date of birth (YYYY-MM-DD format)',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
+
+  @ApiProperty({
+    example: 'Software developer looking for a clean and quiet place. Non-smoker, no pets. I enjoy hiking and photography.',
+    description: 'User bio/description',
+    required: false,
+    maxLength: 500,
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(500, { message: 'Bio must be less than 500 characters' })
+  bio?: string;
 }

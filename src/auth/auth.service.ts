@@ -48,6 +48,9 @@ export class AuthService {
         firstName: signupDto.firstName,
         lastName: signupDto.lastName,
         role: signupDto.role || 'USER',
+        phoneNumber: signupDto.phoneNumber,
+        dateOfBirth: signupDto.dateOfBirth ? new Date(signupDto.dateOfBirth) : null,
+        bio: signupDto.bio,
       },
       select: {
         id: true,
@@ -57,6 +60,9 @@ export class AuthService {
         role: true,
         verificationStatus: true,
         avatarUrl: true,
+        phoneNumber: true,
+        dateOfBirth: true,
+        bio: true,
         createdAt: true,
       },
     });

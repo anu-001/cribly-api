@@ -14,10 +14,4 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('health')
-  @ApiOperation({ summary: 'Health Check Endpoint' })
-  @ApiResponse({ status: 200, description: 'Health status of the API' })
-  healthCheck(): object {
-    return this.appService.healthCheck();
-  }
 }

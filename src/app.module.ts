@@ -17,6 +17,7 @@ import { RoommateProfilesModule } from './roommate-profiles/roommate-profiles.mo
 import { ExploreModule } from './explore/explore.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { ConnectionsModule } from './connections/connections.module';
+import { ChatModule } from './chat/chat.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
 @Module({
@@ -44,6 +45,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
     ExploreModule,
     FavoritesModule,
     ConnectionsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

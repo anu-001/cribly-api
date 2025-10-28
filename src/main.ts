@@ -25,7 +25,7 @@ async function bootstrap() {
 
   // CORS
   const corsOrigin =
-    configService.get('CORS_ORIGIN') || 'http://localhost:3000';
+    configService.get('CORS_ORIGIN') || 'http://localhost:5173';
   app.enableCors({
     origin: corsOrigin,
     credentials: true,
@@ -58,11 +58,12 @@ async function bootstrap() {
     new TransformInterceptor(),
   );
 
-  // API versioning
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
+  // API versioning - disabled for simplicity
+  // app.enableVersioning({
+  //   type: VersioningType.URI,
+  //   defaultVersion: '1',
+  //   prefix: 'api/v',
+  // });
 
   // Swagger documentation
   const config = new DocumentBuilder()
