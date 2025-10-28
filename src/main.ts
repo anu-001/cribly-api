@@ -34,6 +34,7 @@ async function bootstrap() {
     exposedHeaders: ['X-Request-ID'],
   });
 
+
   // Global prefix
   app.setGlobalPrefix('api/v1');
 

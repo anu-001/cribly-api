@@ -62,6 +62,13 @@ export class VerificationService {
     idImageUrl: string,
     selfieImageUrl: string,
   ): Promise<InitiateVerificationResponseDto> {
+    // 0. Basic input validation for URLs
+    const isValidUrl = (u?: string) => !!u && /^https?:\/\//i.test(u);
+    if (!isValidUrl(idImageUrl) || !isValidUrl(selfieImageUrl)) {
+      throw new BadRequestException(
+        'Invalid image URLs. Provide public HTTPS URLs for idImageUrl and selfieImageUrl',
+      );
+    }
     // 1. Check if user is already verified
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -120,13 +127,27 @@ export class VerificationService {
         id_image_url: idImageUrl,
         selfie_image_url: selfieImageUrl,
         user_id: userId,
-      });
+      }, { timeout: 15000 });
 
       this.logger.log(
         `✅ AegisID verification initiated for user ${userId}. Response: ${aegisResponse.status}`,
       );
     } catch (error) {
-      this.logger.error(`❌ AegisID verification failed for user ${userId}:`, error);
+      const status = (error as any)?.response?.status;
+      const data = (error as any)?.response?.data;
+      const message = (error as any)?.message || 'Unknown error';
+      this.logger.error(
+        `❌ AegisID verification failed for user ${userId}: status=${status} message=${message} data=${JSON.stringify(
+          data,
+        )}`,
+      );
+      // Surface a more actionable message to the client while staying 400
+      if (status) {
+        throw new BadRequestException(
+          `Verification provider error (${status}): ${data?.message || message || 'Request failed'
+          }`,
+        );
+      }
       throw new BadRequestException('Verification service temporarily unavailable');
     }
 
