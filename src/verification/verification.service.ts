@@ -5,6 +5,7 @@ import {
   Logger,
   ForbiddenException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { VerificationStatus } from '@prisma/client';
@@ -83,9 +84,8 @@ export class VerificationService {
     }
 
     if (user.verificationStatus === VerificationStatus.VERIFIED) {
-      throw new BadRequestException(
-        'User is already verified. No further verification needed.',
-      );
+      // Use 409 Conflict to indicate resource state prevents action
+      throw new ConflictException('User is already verified');
     }
 
     // 2. Check rate limiting (3 attempts per day)
@@ -218,9 +218,7 @@ export class VerificationService {
     }
 
     if (user.verificationStatus === VerificationStatus.VERIFIED) {
-      throw new BadRequestException(
-        'User is already verified. No further verification needed.',
-      );
+      throw new ConflictException('User is already verified');
     }
 
     // 2. Check rate limiting (3 attempts per day)

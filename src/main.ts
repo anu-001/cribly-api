@@ -24,8 +24,11 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // CORS
-  const corsOrigin =
-    configService.get('CORS_ORIGIN') || 'http://localhost:5173';
+  const corsOrigin = [
+    configService.get('CORS_ORIGIN') || 'http://localhost:5173',
+    'https://cribly.netlify.app'
+  ];
+
   app.enableCors({
     origin: corsOrigin,
     credentials: true,
