@@ -20,7 +20,7 @@ lerna-debug.log*
 .env-old
 # temp directory
 .temp
-.tmp
+.env
 
 .github/
 .vscode/
